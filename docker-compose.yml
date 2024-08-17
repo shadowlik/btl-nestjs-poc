@@ -1,0 +1,22 @@
+version: '3.5'
+
+services:
+  btl-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: btl
+      POSTGRES_PASSWORD: btl
+      POSTGRES_DB: btl
+      PGDATA: /data/postgres
+    volumes:
+      - btl-postgres-data:/data/postgres
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+    btl-postgres-data:

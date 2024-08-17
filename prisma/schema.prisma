@@ -1,0 +1,2687 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SequelizeMeta {
+  name String @id @db.VarChar(255)
+}
+
+model addresses {
+  id              String            @id @db.Uuid
+  country         String?           @db.VarChar(255)
+  line_1          String?
+  line_2          String?
+  city            String?           @db.VarChar(255)
+  state           String?           @db.VarChar(255)
+  postcode        String?           @db.VarChar(255)
+  lat             String?           @db.VarChar(255)
+  lon             String?           @db.VarChar(255)
+  createdAt       DateTime          @db.Timestamptz(6)
+  updatedAt       DateTime          @db.Timestamptz(6)
+  url             String?
+  payment_methods payment_methods[]
+  venues          venues[]
+}
+
+model asset_delete_queue {
+  id        String   @id @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  asset_id  String?  @db.Uuid
+  assets    assets?  @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+}
+
+model assets {
+  id                                                            String                    @id @db.Uuid
+  key                                                           String?
+  filename                                                      String?
+  extension                                                     String?
+  createdAt                                                     DateTime                  @db.Timestamptz(6)
+  updatedAt                                                     DateTime                  @db.Timestamptz(6)
+  creator_id                                                    String?                   @db.Uuid
+  asset_delete_queue                                            asset_delete_queue[]
+  users_assets_creator_idTousers                                users?                    @relation("assets_creator_idTousers", fields: [creator_id], references: [id])
+  btl_featured_geos                                             btl_featured_geos[]
+  cecs                                                          cecs[]
+  clubs_clubs_cover_idToassets                                  clubs[]                   @relation("clubs_cover_idToassets")
+  clubs_clubs_icon_idToassets                                   clubs[]                   @relation("clubs_icon_idToassets")
+  post_images                                                   post_images[]
+  pro_page_images                                               pro_page_images[]         @ignore
+  pro_shop_item_images                                          pro_shop_item_images[]    @ignore
+  product_images                                                product_images[]
+  product_variant_images                                        product_variant_images[]
+  program_images                                                program_images[]
+  sponsors_sponsors_icon_idToassets                             sponsors[]                @relation("sponsors_icon_idToassets")
+  sponsors_sponsors_logo_idToassets                             sponsors[]                @relation("sponsors_logo_idToassets")
+  user_permits_user_permits_app_identification_photo_idToassets user_permits[]            @relation("user_permits_app_identification_photo_idToassets")
+  user_permits_user_permits_app_idnyc_photo_idToassets          user_permits[]            @relation("user_permits_app_idnyc_photo_idToassets")
+  user_permits_user_permits_app_permit_photo_idToassets         user_permits[]            @relation("user_permits_app_permit_photo_idToassets")
+  users_users_profile_image_idToassets                          users[]                   @relation("users_profile_image_idToassets")
+  venue_homepage_callouts                                       venue_homepage_callouts[]
+  venue_images                                                  venue_images[]
+
+  @@unique([key, filename], map: "assets_key_filename")
+}
+
+model attribute_values {
+  id                      String                    @id @db.Uuid
+  name                    String                    @db.VarChar(255)
+  attribute_id            String?                   @db.Uuid
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  order                   Int?
+  attributes              attributes?               @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  club_attributes         club_attributes[]
+  program_attributes      program_attributes[]
+  user_profile_attributes user_profile_attributes[]
+
+  @@index([attribute_id], map: "attribute_values_attribute_id")
+}
+
+model attributes {
+  id                              String                            @id @db.Uuid
+  name                            String                            @db.VarChar(255)
+  createdAt                       DateTime                          @db.Timestamptz(6)
+  updatedAt                       DateTime                          @db.Timestamptz(6)
+  type                            String?
+  attribute_values                attribute_values[]
+  club_attribute_settings         club_attribute_settings[]
+  club_attributes                 club_attributes[]
+  program_attribute_settings      program_attribute_settings[]
+  program_attributes              program_attributes[]
+  user_profile_attribute_settings user_profile_attribute_settings[]
+  user_profile_attributes         user_profile_attributes[]
+
+  @@index([type], map: "attributes_type")
+}
+
+model beneficiaries {
+  id                      String                    @id @db.Uuid
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  benefit_id              String?                   @db.Uuid
+  customer_id             String?                   @db.Uuid
+  status                  String                    @default("OK") @db.VarChar(255)
+  benefits                benefits?                 @relation(fields: [benefit_id], references: [id], onDelete: Cascade)
+  customers               customers?                @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  beneficiary_group_users beneficiary_group_users[]
+  benefit_bookings        benefit_bookings[]
+
+  @@unique([benefit_id, customer_id], map: "beneficiaries_benefit_id_customer_id")
+  @@index([customer_id], map: "beneficiaries_customer_id")
+}
+
+model beneficiary_group_caps {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  beneficiary_group_id String?             @db.Uuid
+  cap_id               String?             @db.Uuid
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade)
+  caps                 caps?               @relation(fields: [cap_id], references: [id], onDelete: Cascade)
+
+  @@index([beneficiary_group_id], map: "beneficiary_group_caps_beneficiary_group_id")
+}
+
+model beneficiary_group_exclusive_blocks {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  beneficiary_group_id String?             @db.Uuid
+  benefit_block_id     String?             @db.Uuid
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade)
+  benefit_blocks       benefit_blocks?     @relation(fields: [benefit_block_id], references: [id], onDelete: Cascade)
+
+  @@unique([beneficiary_group_id, benefit_block_id], map: "beneficiary_group_exclusive_blocks_beneficiary_group_id_benefit")
+}
+
+model beneficiary_group_exclusive_programs {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  beneficiary_group_id String?             @db.Uuid
+  benefit_program_id   String?             @db.Uuid
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade)
+  benefit_programs     benefit_programs?   @relation(fields: [benefit_program_id], references: [id], onDelete: Cascade)
+
+  @@unique([beneficiary_group_id, benefit_program_id], map: "beneficiary_group_exclusive_programs_beneficiary_group_id_benef")
+}
+
+model beneficiary_group_users {
+  id                                       String                                     @id @db.Uuid
+  createdAt                                DateTime                                   @db.Timestamptz(6)
+  updatedAt                                DateTime                                   @db.Timestamptz(6)
+  beneficiary_group_id                     String?                                    @db.Uuid
+  beneficiary_id                           String?                                    @db.Uuid
+  verification_info                        Json?
+  beneficiary_groups                       beneficiary_groups?                        @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade)
+  beneficiaries                            beneficiaries?                             @relation(fields: [beneficiary_id], references: [id], onDelete: Cascade)
+  user_package_item_beneficiary_group_uses user_package_item_beneficiary_group_uses[]
+
+  @@unique([beneficiary_group_id, beneficiary_id], map: "beneficiary_group_users_beneficiary_group_id_beneficiary_id")
+  @@index([beneficiary_id], map: "beneficiary_group_users_beneficiary_id")
+}
+
+model beneficiary_group_verification_emails {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  type                 String              @db.VarChar(255)
+  allowed              Boolean
+  value                String              @db.VarChar(255)
+  beneficiary_group_id String?             @db.Uuid
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade)
+
+  @@unique([beneficiary_group_id, type, value], map: "beneficiary_group_verification_emails_beneficiary_group_id_type")
+}
+
+model beneficiary_groups {
+  id                                         String                                       @id @db.Uuid
+  createdAt                                  DateTime                                     @db.Timestamptz(6)
+  updatedAt                                  DateTime                                     @db.Timestamptz(6)
+  benefit_id                                 String?                                      @db.Uuid
+  name                                       String?                                      @db.VarChar(255)
+  description                                String?
+  status                                     String?                                      @db.VarChar(255)
+  verification_method                        String?                                      @db.VarChar(255)
+  verification_name                          String?                                      @db.VarChar(255)
+  verification_description                   String?                                      @db.VarChar(255)
+  verification_settings                      Json?
+  base_discount_percent                      Decimal?                                     @db.Decimal
+  base_discount_cents                        Decimal?                                     @db.Decimal
+  verification_fallback_message              String?
+  beneficiary_group_caps                     beneficiary_group_caps[]
+  beneficiary_group_exclusive_blocks         beneficiary_group_exclusive_blocks[]
+  beneficiary_group_exclusive_programs       beneficiary_group_exclusive_programs[]
+  beneficiary_group_users                    beneficiary_group_users[]
+  beneficiary_group_verification_emails      beneficiary_group_verification_emails[]
+  benefits                                   benefits?                                    @relation(fields: [benefit_id], references: [id], onDelete: Cascade)
+  benefit_bookings                           benefit_bookings[]
+  benefit_venue_permitted_beneficiary_groups benefit_venue_permitted_beneficiary_groups[]
+  program_package_items                      program_package_items[]
+  user_program_package_items                 user_program_package_items[]
+
+  @@index([benefit_id], map: "beneficiary_groups_benefit_id")
+}
+
+model benefit_blocks {
+  id                                 String                               @id @db.Uuid
+  createdAt                          DateTime                             @db.Timestamptz(6)
+  updatedAt                          DateTime                             @db.Timestamptz(6)
+  benefit_venue_id                   String?                              @db.Uuid
+  resource_id                        String?                              @db.Uuid
+  notes                              String?
+  date_start                         DateTime?                            @db.Date
+  date_end                           DateTime?                            @db.Date
+  wall_start                         DateTime?                            @db.Time(6)
+  wall_end                           DateTime?                            @db.Time(6)
+  pricing_type                       String?
+  benefactor_hourly_cost_cents       Decimal?                             @db.Decimal
+  benefit_exclusive                  Boolean?
+  beneficiary_group_exclusive_blocks beneficiary_group_exclusive_blocks[]
+  benefit_venues                     benefit_venues?                      @relation(fields: [benefit_venue_id], references: [id], onDelete: Cascade)
+  resources                          resources?                           @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+
+  @@index([benefit_venue_id], map: "benefit_blocks_benefit_venue_id")
+  @@index([resource_id], map: "benefit_blocks_resource_id")
+}
+
+model benefit_bookings {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  benefit_id           String?             @db.Uuid
+  beneficiary_group_id String?             @db.Uuid
+  beneficiary_id       String?             @db.Uuid
+  program_booking_id   String?             @db.Uuid
+  notes                String?
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id])
+  beneficiaries        beneficiaries?      @relation(fields: [beneficiary_id], references: [id])
+  benefits             benefits?           @relation(fields: [benefit_id], references: [id], onDelete: Cascade)
+  program_bookings     program_bookings?   @relation(fields: [program_booking_id], references: [id])
+
+  @@index([beneficiary_group_id], map: "benefit_bookings_beneficiary_group_id")
+  @@index([beneficiary_id], map: "benefit_bookings_beneficiary_id")
+  @@index([benefit_id], map: "benefit_bookings_benefit_id")
+  @@index([program_booking_id], map: "benefit_bookings_program_booking_id")
+}
+
+model benefit_faqs {
+  id          String    @id @db.Uuid
+  createdAt   DateTime  @db.Timestamptz(6)
+  updatedAt   DateTime  @db.Timestamptz(6)
+  benefit_id  String?   @db.Uuid
+  name        String?   @db.VarChar(255)
+  description String?
+  order       Int?
+  benefits    benefits? @relation(fields: [benefit_id], references: [id], onDelete: Cascade)
+
+  @@index([benefit_id], map: "benefit_faqs_benefit_id")
+}
+
+model benefit_programs {
+  id                                   String                                 @id @db.Uuid
+  createdAt                            DateTime                               @db.Timestamptz(6)
+  updatedAt                            DateTime                               @db.Timestamptz(6)
+  benefit_id                           String?                                @db.Uuid
+  program_id                           String?                                @db.Uuid
+  checkin_instructions                 String?
+  beneficiary_group_exclusive_programs beneficiary_group_exclusive_programs[]
+  benefits                             benefits?                              @relation(fields: [benefit_id], references: [id], onDelete: Cascade)
+  programs                             programs?                              @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@unique([benefit_id, program_id], map: "benefit_programs_benefit_id_program_id")
+}
+
+model benefit_venue_faqs {
+  id               String          @id @db.Uuid
+  createdAt        DateTime        @db.Timestamptz(6)
+  updatedAt        DateTime        @db.Timestamptz(6)
+  benefit_venue_id String?         @db.Uuid
+  name             String?
+  description      String?
+  order            Int?
+  benefit_venues   benefit_venues? @relation(fields: [benefit_venue_id], references: [id], onDelete: Cascade)
+
+  @@index([benefit_venue_id], map: "benefit_venue_faqs_benefit_venue_id")
+}
+
+model benefit_venue_permitted_beneficiary_groups {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  beneficiary_group_id String?             @db.Uuid
+  benefit_venue_id     String?             @db.Uuid
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade, map: "benefit_venue_permitted_beneficiary_g_beneficiary_group_id_fkey")
+  benefit_venues       benefit_venues?     @relation(fields: [benefit_venue_id], references: [id], onDelete: Cascade, map: "benefit_venue_permitted_beneficiary_group_benefit_venue_id_fkey")
+
+  @@index([benefit_venue_id], map: "benefit_venue_permitted_beneficiary_groups_benefit_venue_id")
+}
+
+model benefit_venue_permitted_resources {
+  id               String          @id @db.Uuid
+  createdAt        DateTime        @db.Timestamptz(6)
+  updatedAt        DateTime        @db.Timestamptz(6)
+  resource_id      String?         @db.Uuid
+  benefit_venue_id String?         @db.Uuid
+  benefit_venues   benefit_venues? @relation(fields: [benefit_venue_id], references: [id], onDelete: Cascade)
+  resources        resources?      @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+
+  @@index([benefit_venue_id], map: "benefit_venue_permitted_resources_benefit_venue_id")
+}
+
+model benefit_venue_tags {
+  id               String          @id @db.Uuid
+  createdAt        DateTime        @db.Timestamptz(6)
+  updatedAt        DateTime        @db.Timestamptz(6)
+  creator_id       String?         @db.Uuid
+  benefit_venue_id String?         @db.Uuid
+  tag_id           String?         @db.Uuid
+  benefit_venues   benefit_venues? @relation(fields: [benefit_venue_id], references: [id], onDelete: Cascade)
+  users            users?          @relation(fields: [creator_id], references: [id])
+  org_tags         org_tags?       @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@unique([benefit_venue_id, tag_id], map: "benefit_venue_tags_benefit_venue_id_tag_id")
+}
+
+model benefit_venues {
+  id                                         String                                       @id @db.Uuid
+  createdAt                                  DateTime                                     @db.Timestamptz(6)
+  updatedAt                                  DateTime                                     @db.Timestamptz(6)
+  benefit_id                                 String?                                      @db.Uuid
+  venue_id                                   String?                                      @db.Uuid
+  status                                     String?                                      @db.VarChar(255)
+  checkin_instructions                       String?
+  visible_reservation_days                   Int?
+  description                                String?
+  faq_section_title                          String?
+  settings                                   Json?
+  benefit_blocks                             benefit_blocks[]
+  benefit_venue_faqs                         benefit_venue_faqs[]
+  benefit_venue_permitted_beneficiary_groups benefit_venue_permitted_beneficiary_groups[]
+  benefit_venue_permitted_resources          benefit_venue_permitted_resources[]
+  benefit_venue_tags                         benefit_venue_tags[]
+  benefits                                   benefits?                                    @relation(fields: [benefit_id], references: [id], onDelete: Cascade)
+  venues                                     venues?                                      @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@unique([benefit_id, venue_id], map: "benefit_venues_benefit_id_venue_id")
+}
+
+model benefits {
+  id                 String               @id @db.Uuid
+  createdAt          DateTime             @db.Timestamptz(6)
+  updatedAt          DateTime             @db.Timestamptz(6)
+  sid                String               @unique(map: "benefits_sid") @db.VarChar(255)
+  creator_id         String?              @db.Uuid
+  org_id             String?              @db.Uuid
+  name               String
+  description        String?
+  status             String?
+  date_start         DateTime?            @db.Date
+  date_end           DateTime?            @db.Date
+  wall_start         DateTime?            @db.Time(6)
+  wall_end           DateTime?            @db.Time(6)
+  tz                 String?
+  color              String?
+  settings           Json?
+  beneficiaries      beneficiaries[]
+  beneficiary_groups beneficiary_groups[]
+  benefit_bookings   benefit_bookings[]
+  benefit_faqs       benefit_faqs[]
+  benefit_programs   benefit_programs[]
+  benefit_venues     benefit_venues[]
+  users              users?               @relation(fields: [creator_id], references: [id])
+  orgs               orgs?                @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  clubs              clubs[]
+  line_items         line_items[]
+
+  @@index([org_id], map: "benefits_org_id")
+}
+
+model blocked_users {
+  id                                         String   @id @db.Uuid
+  user_id                                    String?  @db.Uuid
+  blocked_user_id                            String?  @db.Uuid
+  createdAt                                  DateTime @db.Timestamptz(6)
+  updatedAt                                  DateTime @db.Timestamptz(6)
+  users_blocked_users_blocked_user_idTousers users?   @relation("blocked_users_blocked_user_idTousers", fields: [blocked_user_id], references: [id], onDelete: Cascade)
+  users_blocked_users_user_idTousers         users?   @relation("blocked_users_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, blocked_user_id], map: "blocked_users_user_id_blocked_user_id")
+}
+
+model btl_featured_facilities {
+  id        String   @id @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  title     String?
+  org_id    String?  @db.Uuid
+  venue_id  String?  @db.Uuid
+  url       String?
+  sport     String?
+  order     Int?
+  orgs      orgs?    @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  venues    venues?  @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+}
+
+model btl_featured_geos {
+  id        String   @id @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  title     String?
+  country   String?
+  state     String?
+  city      String?
+  image_id  String?  @db.Uuid
+  order     Int?
+  assets    assets?  @relation(fields: [image_id], references: [id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model btl_org {
+  org_id     String   @db.Uuid
+  single_row Boolean? @unique @default(true)
+  orgs       orgs     @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "btl_org_id_fkey")
+
+  @@ignore
+}
+
+model caps {
+  id                     String                   @id @db.Uuid
+  createdAt              DateTime                 @db.Timestamptz(6)
+  updatedAt              DateTime                 @db.Timestamptz(6)
+  type                   String?                  @db.VarChar(255)
+  time_period            String?                  @db.VarChar(255)
+  max_booking_count      Int?
+  beneficiary_group_caps beneficiary_group_caps[]
+}
+
+model cec_emails {
+  id        String   @id @db.Uuid
+  cec_id    String?  @db.Uuid
+  email     String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  cecs      cecs?    @relation(fields: [cec_id], references: [id], onDelete: Cascade)
+
+  @@index([cec_id], map: "cec_emails_cec_id")
+}
+
+model cecs {
+  id                    String       @id @db.Uuid
+  name                  String?      @db.VarChar(255)
+  slug                  String?      @unique @db.VarChar(255)
+  customerio_segment_id String?      @db.VarChar(255)
+  pre_title             String?
+  pre_copy              String?
+  pre_cta_text          String?      @db.VarChar(255)
+  post_title            String?
+  post_copy             String?
+  post_cta_text         String?      @db.VarChar(255)
+  post_cta_url          String?
+  creator_id            String?      @db.Uuid
+  createdAt             DateTime     @db.Timestamptz(6)
+  updatedAt             DateTime     @db.Timestamptz(6)
+  image_id              String?      @db.Uuid
+  cec_emails            cec_emails[]
+  users                 users?       @relation(fields: [creator_id], references: [id])
+  assets                assets?      @relation(fields: [image_id], references: [id])
+}
+
+model club_attribute_settings {
+  id             String      @id @db.Uuid
+  attribute_id   String?     @db.Uuid
+  web_filterable Boolean?    @default(false)
+  app_filterable Boolean?    @default(false)
+  createdAt      DateTime    @db.Timestamptz(6)
+  updatedAt      DateTime    @db.Timestamptz(6)
+  attributes     attributes? @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+
+  @@index([attribute_id], map: "club_attribute_settings_attribute_id")
+}
+
+model club_attributes {
+  id                 String            @id @db.Uuid
+  club_id            String?           @db.Uuid
+  attribute_id       String?           @db.Uuid
+  attribute_value_id String?           @db.Uuid
+  createdAt          DateTime          @db.Timestamptz(6)
+  updatedAt          DateTime          @db.Timestamptz(6)
+  attributes         attributes?       @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  attribute_values   attribute_values? @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade)
+  clubs              clubs?            @relation(fields: [club_id], references: [id], onDelete: Cascade)
+
+  @@index([attribute_id, attribute_value_id], map: "club_attributes_attribute_id_attribute_value_id")
+  @@index([club_id], map: "club_attributes_club_id")
+}
+
+model club_locations {
+  id          String     @id @db.Uuid
+  club_id     String?    @db.Uuid
+  location_id String?    @db.Uuid
+  createdAt   DateTime   @db.Timestamptz(6)
+  updatedAt   DateTime   @db.Timestamptz(6)
+  clubs       clubs?     @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  locations   locations? @relation(fields: [location_id], references: [id], onDelete: Cascade)
+
+  @@unique([club_id, location_id], map: "club_locations_club_id_location_id")
+}
+
+model club_members {
+  id        String   @id @db.Uuid
+  club_id   String?  @db.Uuid
+  user_id   String?  @db.Uuid
+  role      String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  clubs     clubs?   @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  users     users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([club_id, user_id], map: "club_members_club_id_user_id_uk")
+  @@index([user_id], map: "club_members_user_id")
+}
+
+model club_posts {
+  id        String   @id @db.Uuid
+  club_id   String   @db.Uuid
+  post_id   String   @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  clubs     clubs    @relation(fields: [club_id], references: [id], onDelete: Cascade, map: "club_posts_club_id_fkey1")
+  posts     posts    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@unique([club_id, post_id], map: "club_posts_club_id_post_id")
+  @@index([club_id, createdAt, id], map: "club_posts_club_id_created_at_id")
+}
+
+model club_products {
+  id         String    @id @db.Uuid
+  club_id    String?   @db.Uuid
+  product_id String?   @db.Uuid
+  order      Int?
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  clubs      clubs?    @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  products   products? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([club_id], map: "club_products_club_id")
+}
+
+model club_programs {
+  id         String    @id @db.Uuid
+  club_id    String?   @db.Uuid
+  program_id String?   @db.Uuid
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  clubs      clubs?    @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@index([club_id], map: "club_programs_club_id")
+  @@index([program_id], map: "club_programs_program_id")
+}
+
+model club_sponsors {
+  id         String    @id @db.Uuid
+  club_id    String?   @db.Uuid
+  sponsor_id String?   @db.Uuid
+  order      Int?
+  clubs      clubs?    @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  sponsors   sponsors? @relation(fields: [sponsor_id], references: [id], onDelete: Cascade)
+
+  @@unique([club_id, sponsor_id], map: "club_sponsors_club_id_sponsor_id")
+}
+
+model club_venues {
+  id        String   @id @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  club_id   String   @db.Uuid
+  venue_id  String   @db.Uuid
+  clubs     clubs    @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  venues    venues   @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([club_id], map: "club_venues_club_id")
+}
+
+model club_video_products {
+  id            String       @id @db.Uuid
+  createdAt     DateTime     @db.Timestamptz(6)
+  updatedAt     DateTime     @db.Timestamptz(6)
+  club_video_id String?      @db.Uuid
+  product_id    String?      @db.Uuid
+  order         Int?
+  club_videos   club_videos? @relation(fields: [club_video_id], references: [id], onDelete: Cascade)
+  products      products?    @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([club_video_id, product_id], map: "club_video_products_club_video_id_product_id")
+}
+
+model club_videos {
+  id                  String                @id @db.Uuid
+  createdAt           DateTime              @db.Timestamptz(6)
+  updatedAt           DateTime              @db.Timestamptz(6)
+  club_id             String?               @db.Uuid
+  title               String?               @db.VarChar(255)
+  description         String?               @db.VarChar(255)
+  video_url           String?               @db.VarChar(255)
+  order               Int?
+  club_video_products club_video_products[]
+  clubs               clubs?                @relation(fields: [club_id], references: [id], onDelete: Cascade)
+
+  @@index([club_id], map: "club_videos_club_id")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model clubs {
+  id                                String                              @id @db.Uuid
+  sid                               String?                             @db.VarChar(255)
+  org_id                            String?                             @db.Uuid
+  name                              String?                             @db.VarChar(255)
+  description                       String?
+  icon_id                           String?                             @db.Uuid
+  cover_id                          String?                             @db.Uuid
+  is_public                         Boolean?                            @default(false)
+  createdAt                         DateTime                            @db.Timestamptz(6)
+  updatedAt                         DateTime                            @db.Timestamptz(6)
+  creator_id                        String?                             @db.Uuid
+  tagline                           String?
+  settings                          Json?
+  benefit_id                        String?                             @db.Uuid
+  program_query_id                  String?                             @db.Uuid
+  club_attributes                   club_attributes[]
+  club_locations                    club_locations[]
+  club_members                      club_members[]
+  club_posts                        club_posts[]
+  club_products                     club_products[]
+  club_programs                     club_programs[]
+  club_sponsors                     club_sponsors[]
+  club_venues                       club_venues[]
+  club_videos                       club_videos[]
+  benefits                          benefits?                           @relation(fields: [benefit_id], references: [id])
+  assets_clubs_cover_idToassets     assets?                             @relation("clubs_cover_idToassets", fields: [cover_id], references: [id])
+  users                             users?                              @relation(fields: [creator_id], references: [id])
+  assets_clubs_icon_idToassets      assets?                             @relation("clubs_icon_idToassets", fields: [icon_id], references: [id])
+  orgs                              orgs?                               @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  program_queries                   program_queries?                    @relation(fields: [program_query_id], references: [id])
+  explore_clubs_positions           explore_clubs_positions?
+  program_required_club_memberships program_required_club_memberships[]
+  saas_requests                     saas_requests[]
+
+  @@index([org_id], map: "clubs_org_id")
+}
+
+model comments {
+  id                String     @id @db.Uuid
+  post_id           String?    @db.Uuid
+  parent_comment_id String?    @db.Uuid
+  thread_id         String?    @db.Uuid
+  comment           String?
+  deleted           Boolean?   @default(false)
+  is_admin_comment  Boolean?   @default(false)
+  creator_id        String     @db.Uuid
+  createdAt         DateTime   @db.Timestamptz(6)
+  updatedAt         DateTime   @db.Timestamptz(6)
+  users             users      @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  comments          comments?  @relation("commentsTocomments", fields: [parent_comment_id], references: [id], onDelete: Cascade)
+  other_comments    comments[] @relation("commentsTocomments")
+  posts             posts?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@index([createdAt], map: "comments_created_at")
+  @@index([creator_id], map: "comments_creator_id")
+  @@index([parent_comment_id], map: "comments_parent_comment_id")
+  @@index([post_id], map: "comments_post_id")
+  @@index([thread_id], map: "comments_thread_id")
+}
+
+model connect_invites {
+  id                                      String   @id @db.Uuid
+  inviter_id                              String?  @db.Uuid
+  invitee_id                              String?  @db.Uuid
+  is_admin_invite                         String   @default(dbgenerated("false")) @db.VarChar(255)
+  status                                  String?  @db.VarChar(255)
+  createdAt                               DateTime @db.Timestamptz(6)
+  updatedAt                               DateTime @db.Timestamptz(6)
+  users_connect_invites_invitee_idTousers users?   @relation("connect_invites_invitee_idTousers", fields: [invitee_id], references: [id], onDelete: Cascade)
+  users_connect_invites_inviter_idTousers users?   @relation("connect_invites_inviter_idTousers", fields: [inviter_id], references: [id], onDelete: Cascade)
+
+  @@index([invitee_id], map: "connect_invites_invitee_id")
+  @@index([inviter_id], map: "connect_invites_inviter_id")
+}
+
+model custom_landing_pages {
+  id              String         @id @db.Uuid
+  internal_tag_id String?        @db.Uuid
+  creator_id      String?        @db.Uuid
+  name            String?        @db.VarChar(255)
+  description     String?
+  url_slug        String?        @unique(map: "custom_landing_pages_url_slug") @db.VarChar(255)
+  createdAt       DateTime       @db.Timestamptz(6)
+  updatedAt       DateTime       @db.Timestamptz(6)
+  redirect_url    String?
+  users           users?         @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  internal_tags   internal_tags? @relation(fields: [internal_tag_id], references: [id], onDelete: Cascade)
+}
+
+model customers {
+  id              String            @id @db.Uuid
+  createdAt       DateTime          @db.Timestamptz(6)
+  updatedAt       DateTime          @db.Timestamptz(6)
+  org_id          String?           @db.Uuid
+  user_id         String?           @db.Uuid
+  beneficiaries   beneficiaries[]
+  orgs            orgs?             @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  users           users?            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  venue_customers venue_customers[]
+
+  @@unique([org_id, user_id], map: "customers_org_id_user_id")
+  @@index([user_id], map: "customers_user_id")
+}
+
+model explore_clubs_positions {
+  id        String   @id @db.Uuid
+  club_id   String?  @unique(map: "explore_clubs_positions_club_id") @db.Uuid
+  position  Int?     @unique(map: "explore_clubs_positions_position")
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  clubs     clubs?   @relation(fields: [club_id], references: [id], onDelete: Cascade)
+}
+
+model fee_rules {
+  id             String   @id @db.Uuid
+  type           String?  @db.VarChar(255)
+  percent_amount Float?
+  org_id         String?  @db.Uuid
+  creator_id     String?  @db.Uuid
+  createdAt      DateTime @db.Timestamptz(6)
+  updatedAt      DateTime @db.Timestamptz(6)
+  users          users?   @relation(fields: [creator_id], references: [id])
+  orgs           orgs?    @relation(fields: [org_id], references: [id], onDelete: Cascade)
+}
+
+model internal_tags {
+  id                    String                  @id @db.Uuid
+  name                  String                  @unique(map: "internal_tags_name") @db.VarChar(255)
+  description           String?
+  creator_id            String?                 @db.Uuid
+  createdAt             DateTime                @db.Timestamptz(6)
+  updatedAt             DateTime                @db.Timestamptz(6)
+  btl_feature           String?                 @unique(map: "internal_tags_btl_feature") @db.VarChar(255)
+  custom_landing_pages  custom_landing_pages[]
+  users                 users?                  @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  program_internal_tags program_internal_tags[]
+}
+
+model invoices {
+  id                    String                  @id @db.Uuid
+  subtotal_cents        Decimal?                @db.Decimal
+  fees_cents            Decimal?                @db.Decimal
+  sales_tax_cents       Decimal?                @db.Decimal
+  amount_billed_cents   Decimal?                @db.Decimal
+  status                String?                 @db.VarChar(255)
+  note                  String?
+  user_id               String?                 @db.Uuid
+  createdAt             DateTime                @db.Timestamptz(6)
+  updatedAt             DateTime                @db.Timestamptz(6)
+  users                 users?                  @relation(fields: [user_id], references: [id])
+  line_items            line_items[]
+  orders                orders[]
+  payments              payments[]
+  program_bookings      program_bookings[]
+  promo_code_uses       promo_code_uses[]
+  subscription_invoices subscription_invoices[]
+  transfers             transfers[]
+  user_permits          user_permits[]
+}
+
+model lesson_requests {
+  id                     String                  @id @db.Uuid
+  createdAt              DateTime                @db.Timestamptz(6)
+  updatedAt              DateTime                @db.Timestamptz(6)
+  sport                  String?                 @db.VarChar(255)
+  requester_first_name   String?                 @db.VarChar(255)
+  requester_last_name    String?                 @db.VarChar(255)
+  requester_email        String?                 @db.VarChar(255)
+  requester_phone_number String?                 @db.VarChar(255)
+  requester_id           String?                 @db.Uuid
+  requester_message      String?
+  users                  users?                  @relation(fields: [requester_id], references: [id])
+  venue_lesson_requests  venue_lesson_requests[]
+}
+
+model line_items {
+  id                   String        @id @db.Uuid
+  sku                  String?       @db.VarChar(255)
+  description          String?
+  unit_price_cents     Decimal?      @db.Decimal
+  quantity             Int?
+  total_price_cents    Decimal?      @db.Decimal
+  note                 String?
+  info                 Json?
+  invoice_id           String?       @db.Uuid
+  createdAt            DateTime      @db.Timestamptz(6)
+  updatedAt            DateTime      @db.Timestamptz(6)
+  promo_code_id        String?       @db.Uuid
+  discount_cents       Decimal?      @db.Decimal
+  discount_percent     Decimal?      @db.Decimal
+  total_discount_cents Decimal?      @default(0) @db.Decimal
+  benefit_id           String?       @db.Uuid
+  benefits             benefits?     @relation(fields: [benefit_id], references: [id])
+  invoices             invoices?     @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  promo_codes          promo_codes?  @relation(fields: [promo_code_id], references: [id])
+  order_items          order_items[]
+
+  @@index([benefit_id], map: "line_items_benefit_id")
+}
+
+model locations {
+  id                String              @id @db.Uuid
+  name              String?             @db.VarChar(255)
+  address_line_1    String?
+  address_line_2    String?
+  city              String?             @db.VarChar(255)
+  state             String?             @db.VarChar(255)
+  country           String?             @db.VarChar(255)
+  postcode          String?             @db.VarChar(255)
+  location_page     String?
+  createdAt         DateTime            @db.Timestamptz(6)
+  updatedAt         DateTime            @db.Timestamptz(6)
+  lat               Decimal             @default(0) @db.Decimal
+  lon               Decimal             @default(0) @db.Decimal
+  org_id            String?             @db.Uuid
+  club_locations    club_locations[]
+  orgs              orgs?               @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  program_locations program_locations[]
+
+  @@index([org_id], map: "locations_org_id")
+}
+
+model nyc_permit_accounts {
+  id           String         @id @db.Uuid
+  email        String?
+  password     String?
+  notes        String?
+  active       Boolean?       @default(true)
+  creator_id   String?        @db.Uuid
+  createdAt    DateTime       @db.Timestamptz(6)
+  updatedAt    DateTime       @db.Timestamptz(6)
+  users        users?         @relation(fields: [creator_id], references: [id])
+  user_permits user_permits[]
+}
+
+model nyc_permit_cards {
+  id             String         @id @db.Uuid
+  card_number    String?
+  card_exp_month String?
+  card_exp_year  String?
+  card_cvv       String?
+  notes          String?
+  active         Boolean?       @default(true)
+  creator_id     String?        @db.Uuid
+  createdAt      DateTime       @db.Timestamptz(6)
+  updatedAt      DateTime       @db.Timestamptz(6)
+  users          users?         @relation(fields: [creator_id], references: [id])
+  user_permits   user_permits[]
+}
+
+model order_items {
+  id                      String                  @id @db.Uuid
+  order_id                String?                 @db.Uuid
+  program_id              String?                 @db.Uuid
+  user_permit_id          String?                 @db.Uuid
+  product_variant_id      String?                 @db.Uuid
+  type                    String?                 @db.VarChar(255)
+  quantity                Int?
+  fulfilled_at            DateTime?               @db.Timestamptz(6)
+  note                    String?
+  info                    Json?
+  createdAt               DateTime                @db.Timestamptz(6)
+  updatedAt               DateTime                @db.Timestamptz(6)
+  resource_id             String?                 @db.Uuid
+  res_reservation_id      String?                 @db.Uuid
+  program_booking_id      String?                 @db.Uuid
+  user_program_package_id String?                 @db.Uuid
+  line_item_id            String?                 @db.Uuid
+  line_items              line_items?             @relation(fields: [line_item_id], references: [id])
+  orders                  orders?                 @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_variants        product_variants?       @relation(fields: [product_variant_id], references: [id])
+  program_bookings        program_bookings?       @relation(fields: [program_booking_id], references: [id])
+  programs                programs?               @relation(fields: [program_id], references: [id])
+  res_reservations        res_reservations?       @relation(fields: [res_reservation_id], references: [id])
+  resources               resources?              @relation(fields: [resource_id], references: [id])
+  user_permits            user_permits?           @relation(fields: [user_permit_id], references: [id])
+  user_program_packages   user_program_packages?  @relation(fields: [user_program_package_id], references: [id])
+  product_variant_stock   product_variant_stock[]
+
+  @@index([order_id], map: "order_items_order_id")
+}
+
+model orders {
+  id                  String              @id @db.Uuid
+  org_id              String?             @db.Uuid
+  user_id             String?             @db.Uuid
+  invoice_id          String?             @db.Uuid
+  shipping_address_id String?             @db.Uuid
+  status              String?             @db.VarChar(255)
+  note                String?
+  fulfilled_at        DateTime?           @db.Timestamptz(6)
+  createdAt           DateTime            @db.Timestamptz(6)
+  updatedAt           DateTime            @db.Timestamptz(6)
+  order_items         order_items[]
+  invoices            invoices?           @relation(fields: [invoice_id], references: [id])
+  orgs                orgs?               @relation(fields: [org_id], references: [id])
+  shipping_addresses  shipping_addresses? @relation(fields: [shipping_address_id], references: [id])
+  users               users?              @relation(fields: [user_id], references: [id])
+
+  @@index([invoice_id], map: "orders_invoice_id")
+  @@index([org_id], map: "orders_org_id")
+}
+
+model org_members {
+  id        String   @id @db.Uuid
+  org_id    String?  @db.Uuid
+  user_id   String?  @db.Uuid
+  role      String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  orgs      orgs?    @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  users     users?   @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, org_id], map: "org_members_user_id_org_id_uk")
+  @@index([org_id], map: "org_members_org_id")
+}
+
+model org_tags {
+  id                 String               @id @db.Uuid
+  createdAt          DateTime             @db.Timestamptz(6)
+  updatedAt          DateTime             @db.Timestamptz(6)
+  org_id             String?              @db.Uuid
+  creator_id         String?              @db.Uuid
+  name               String               @db.VarChar(255)
+  label              String?              @db.VarChar(255)
+  color              String?              @db.VarChar(255)
+  benefit_venue_tags benefit_venue_tags[]
+  users              users?               @relation(fields: [creator_id], references: [id])
+  orgs               orgs?                @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  pq_org_tags        pq_org_tags[]
+  program_tags       program_tags[]
+}
+
+model orgs {
+  id                                     String                    @id @db.Uuid
+  name                                   String?
+  createdAt                              DateTime                  @db.Timestamptz(6)
+  updatedAt                              DateTime                  @db.Timestamptz(6)
+  sid                                    String?                   @unique(map: "orgs_sid") @db.VarChar(255)
+  settings                               Json?
+  default_program_registration_window_id String?                   @db.Uuid
+  stripe_account_id                      String?                   @db.VarChar(255)
+  benefits                               benefits[]
+  btl_featured_facilities                btl_featured_facilities[]
+  btl_org                                btl_org[]                 @ignore
+  clubs                                  clubs[]
+  customers                              customers[]
+  fee_rules                              fee_rules[]
+  locations                              locations[]
+  orders                                 orders[]
+  org_members                            org_members[]
+  org_tags                               org_tags[]
+  windows                                windows?                  @relation(fields: [default_program_registration_window_id], references: [id])
+  pq_orgs                                pq_orgs[]
+  products                               products[]
+  program_package_sets                   program_package_sets[]
+  programs                               programs[]
+  roles                                  roles[]
+  sponsors                               sponsors[]
+  subscription_plans                     subscription_plans[]
+  transfers                              transfers[]
+  user_program_packages                  user_program_packages[]
+  variant_options                        variant_options[]
+  venues                                 venues[]
+}
+
+model ott_auth_requests {
+  id        String   @id @db.Uuid
+  user_id   String?  @db.Uuid
+  ott       String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  users     users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([ott], map: "ott_auth_requests_ott")
+  @@index([user_id], map: "ott_auth_requests_user_id")
+}
+
+model payment_methods {
+  id                 String          @id @db.Uuid
+  user_id            String?         @db.Uuid
+  billing_address_id String?         @db.Uuid
+  card_brand         String?         @db.VarChar(255)
+  card_last_4        String?         @db.VarChar(255)
+  name_on_card       String?         @db.VarChar(255)
+  stripe_customer_id String?         @db.VarChar(255)
+  stripe_card_id     String?         @db.VarChar(255)
+  createdAt          DateTime        @db.Timestamptz(6)
+  updatedAt          DateTime        @db.Timestamptz(6)
+  card_exp_month     Int?
+  card_exp_year      Int?
+  deleted            Boolean?        @default(false)
+  addresses          addresses?      @relation(fields: [billing_address_id], references: [id])
+  users              users?          @relation(fields: [user_id], references: [id])
+  payments           payments[]
+  subscriptions      subscriptions[]
+
+  @@index([stripe_card_id], map: "payment_methods_stripe_card_id")
+}
+
+model payments {
+  id                       String           @id @db.Uuid
+  user_id                  String?          @db.Uuid
+  invoice_id               String?          @db.Uuid
+  payment_method_id        String?          @db.Uuid
+  stripe_card_id           String?          @db.VarChar(255)
+  stripe_payment_intent_id String?          @db.VarChar(255)
+  amount_billed_cents      Decimal?         @db.Decimal
+  amount_paid_cents        Decimal?         @db.Decimal
+  statement_descriptor     String?          @db.VarChar(255)
+  status                   String?          @db.VarChar(255)
+  info                     Json?
+  createdAt                DateTime         @db.Timestamptz(6)
+  updatedAt                DateTime         @db.Timestamptz(6)
+  note                     String?
+  invoices                 invoices?        @relation(fields: [invoice_id], references: [id])
+  payment_methods          payment_methods? @relation(fields: [payment_method_id], references: [id])
+  users                    users?           @relation(fields: [user_id], references: [id])
+  refunds                  refunds[]
+}
+
+model perms {
+  name        String       @id @db.VarChar(255)
+  label       String?      @db.VarChar(255)
+  description String?
+  role_perms  role_perms[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model player_profile_quiz {
+  quiz_id String?  @db.Uuid
+  quizzes quizzes? @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model player_profile_quiz_outputs {
+  id           String   @id @db.Uuid
+  player_level String?  @db.VarChar(255)
+  answers      String[] @db.VarChar(255)
+
+  @@index([answers], map: "player_profile_quiz_outputs_answers", type: Gin)
+}
+
+model post_images {
+  id        String   @id @db.Uuid
+  post_id   String   @db.Uuid
+  image_id  String   @db.Uuid
+  order     Int?     @default(1)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  assets    assets   @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  posts     posts    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id], map: "post_images_post_id")
+}
+
+model posts {
+  id            String          @id @db.Uuid
+  content       String?
+  deleted       Boolean?        @default(false)
+  pinned        Boolean?        @default(false)
+  is_admin_post Boolean?        @default(false)
+  creator_id    String?         @db.Uuid
+  createdAt     DateTime        @db.Timestamptz(6)
+  updatedAt     DateTime        @db.Timestamptz(6)
+  club_posts    club_posts[]
+  comments      comments[]
+  post_images   post_images[]
+  users         users?          @relation(fields: [creator_id], references: [id])
+  program_posts program_posts[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_names {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  name            String?
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_names_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_org_tags {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  org_tag_id      String?          @db.Uuid
+  org_tags        org_tags?        @relation(fields: [org_tag_id], references: [id], onDelete: Cascade)
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_org_tags_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_orgs {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  org_id          String?          @db.Uuid
+  orgs            orgs?            @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_orgs_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_participant_price_cents {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  price_cents_a   Decimal?         @db.Decimal
+  price_cents_b   Decimal?         @db.Decimal
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_participant_price_cents_pq_id")
+}
+
+model pq_programs {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  program_id      String?          @db.Uuid
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+  programs        programs?        @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_programs_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_start_dates {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  date_a          DateTime?        @db.Date
+  date_b          DateTime?        @db.Date
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_start_dates_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_start_dows {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  dow             String?          @db.VarChar(255)
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_start_dows_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_start_times {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  wall_time_a     DateTime?        @db.Time(6)
+  wall_time_b     DateTime?        @db.Time(6)
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_start_times_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_types {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  type            String?          @db.VarChar(255)
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_types_pq_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pq_venues {
+  id              String           @id @db.Uuid
+  pq_id           String?          @db.Uuid
+  neg             Boolean          @default(false)
+  op              String           @default("EQ") @db.VarChar(255)
+  venue_id        String?          @db.Uuid
+  program_queries program_queries? @relation(fields: [pq_id], references: [id], onDelete: Cascade)
+  venues          venues?          @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([pq_id], map: "pq_venues_pq_id")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model pro_page_images {
+  pro_page_id String?    @db.Uuid
+  asset_id    String?    @db.Uuid
+  createdAt   DateTime   @db.Timestamptz(6)
+  updatedAt   DateTime   @db.Timestamptz(6)
+  assets      assets?    @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  pro_pages   pro_pages? @relation(fields: [pro_page_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model pro_pages {
+  id              String            @id @db.Uuid
+  user_id         String            @unique @db.Uuid
+  description     String?
+  createdAt       DateTime          @db.Timestamptz(6)
+  updatedAt       DateTime          @db.Timestamptz(6)
+  url             String?           @unique(map: "pro_pages_url")
+  pro_page_images pro_page_images[] @ignore
+  users           users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pro_shops       pro_shops?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model pro_shop_item_images {
+  asset_id         String?         @db.Uuid
+  pro_shop_item_id String?         @db.Uuid
+  createdAt        DateTime        @db.Timestamptz(6)
+  updatedAt        DateTime        @db.Timestamptz(6)
+  assets           assets?         @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  pro_shop_items   pro_shop_items? @relation(fields: [pro_shop_item_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model pro_shop_items {
+  id                   String                 @id @db.Uuid
+  pro_shop_id          String                 @db.Uuid
+  name                 String?
+  description          String?
+  link                 String?
+  createdAt            DateTime               @db.Timestamptz(6)
+  updatedAt            DateTime               @db.Timestamptz(6)
+  pro_shop_item_images pro_shop_item_images[] @ignore
+  pro_shops            pro_shops              @relation(fields: [pro_shop_id], references: [id], onDelete: Cascade)
+}
+
+model pro_shops {
+  id             String           @id @db.Uuid
+  pro_page_id    String           @unique(map: "pro_shops_pro_page_id") @db.Uuid
+  name           String?
+  description    String?
+  createdAt      DateTime         @db.Timestamptz(6)
+  updatedAt      DateTime         @db.Timestamptz(6)
+  pro_shop_items pro_shop_items[]
+  pro_pages      pro_pages        @relation(fields: [pro_page_id], references: [id], onDelete: Cascade)
+}
+
+model product_images {
+  id         String    @id @db.Uuid
+  product_id String?   @db.Uuid
+  image_id   String?   @db.Uuid
+  order      Int?
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  assets     assets?   @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  products   products? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id], map: "product_images_product_id")
+}
+
+model product_variant_images {
+  id                 String            @id @db.Uuid
+  product_variant_id String?           @db.Uuid
+  image_id           String?           @db.Uuid
+  order              Int?
+  createdAt          DateTime          @db.Timestamptz(6)
+  updatedAt          DateTime          @db.Timestamptz(6)
+  assets             assets?           @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  product_variants   product_variants? @relation(fields: [product_variant_id], references: [id], onDelete: Cascade)
+
+  @@index([product_variant_id], map: "product_variant_images_product_variant_id")
+}
+
+model product_variant_option_values {
+  id                      String                 @id @db.Uuid
+  product_variant_id      String?                @db.Uuid
+  variant_option_value_id String?                @db.Uuid
+  createdAt               DateTime               @db.Timestamptz(6)
+  updatedAt               DateTime               @db.Timestamptz(6)
+  product_variants        product_variants?      @relation(fields: [product_variant_id], references: [id], onDelete: Cascade)
+  variant_option_values   variant_option_values? @relation(fields: [variant_option_value_id], references: [id], onDelete: Cascade)
+
+  @@index([product_variant_id], map: "product_variant_option_values_product_variant_id")
+  @@index([variant_option_value_id], map: "product_variant_option_values_variant_option_value_id")
+}
+
+model product_variant_stock {
+  id                 String            @id @db.Uuid
+  product_variant_id String?           @db.Uuid
+  quantity           Int?
+  type               String?           @db.VarChar(255)
+  note               String?
+  creator_id         String?           @db.Uuid
+  createdAt          DateTime          @db.Timestamptz(6)
+  updatedAt          DateTime          @db.Timestamptz(6)
+  order_item_id      String?           @db.Uuid
+  users              users?            @relation(fields: [creator_id], references: [id])
+  order_items        order_items?      @relation(fields: [order_item_id], references: [id])
+  product_variants   product_variants? @relation(fields: [product_variant_id], references: [id], onDelete: Cascade)
+
+  @@index([order_item_id], map: "product_variant_stock_order_item_id")
+  @@index([product_variant_id], map: "product_variant_stock_product_variant_id")
+}
+
+model product_variants {
+  id                            String                          @id @db.Uuid
+  product_id                    String?                         @db.Uuid
+  name                          String?                         @db.VarChar(255)
+  description                   String?
+  price_cents                   Decimal?                        @db.Decimal
+  stock_type                    String?                         @db.VarChar(255)
+  shipping_required             Boolean?
+  createdAt                     DateTime                        @db.Timestamptz(6)
+  updatedAt                     DateTime                        @db.Timestamptz(6)
+  order_items                   order_items[]
+  product_variant_images        product_variant_images[]
+  product_variant_option_values product_variant_option_values[]
+  product_variant_stock         product_variant_stock[]
+  products                      products?                       @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id], map: "product_variants_product_id")
+}
+
+model products {
+  id                  String                @id @db.Uuid
+  org_id              String?               @db.Uuid
+  name                String?               @db.VarChar(255)
+  description         String?
+  price_cents         Decimal?              @db.Decimal
+  stock_type          String?               @db.VarChar(255)
+  shipping_required   Boolean?
+  creator_id          String?               @db.Uuid
+  createdAt           DateTime              @db.Timestamptz(6)
+  updatedAt           DateTime              @db.Timestamptz(6)
+  type                String                @default("ONSITE") @db.VarChar(255)
+  offsite_url         String?               @db.VarChar(255)
+  offsite_cta         String?               @db.VarChar(255)
+  walmart_item_id     String?               @db.VarChar(255)
+  club_products       club_products[]
+  club_video_products club_video_products[]
+  product_images      product_images[]
+  product_variants    product_variants[]
+  users               users?                @relation(fields: [creator_id], references: [id])
+  orgs                orgs?                 @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  program_products    program_products[]
+
+  @@index([org_id], map: "products_org_id")
+}
+
+model program_attribute_settings {
+  id                    String      @id @db.Uuid
+  attribute_id          String?     @db.Uuid
+  required              Boolean?    @default(false)
+  search_filterable     Boolean?    @default(false)
+  pro_search_filterable Boolean?    @default(false)
+  createdAt             DateTime    @db.Timestamptz(6)
+  updatedAt             DateTime    @db.Timestamptz(6)
+  attributes            attributes? @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+
+  @@index([attribute_id], map: "program_attribute_settings_attribute_id")
+}
+
+model program_attributes {
+  id                 String            @id @db.Uuid
+  program_id         String?           @db.Uuid
+  attribute_id       String?           @db.Uuid
+  attribute_value_id String?           @db.Uuid
+  createdAt          DateTime          @db.Timestamptz(6)
+  updatedAt          DateTime          @db.Timestamptz(6)
+  attributes         attributes?       @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  attribute_values   attribute_values? @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade)
+  programs           programs?         @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@index([attribute_id, attribute_value_id], map: "program_attributes_attribute_id_attribute_value_id")
+  @@index([program_id], map: "program_attributes_program_id")
+}
+
+model program_bookings {
+  id                                           String                           @id @db.Uuid
+  status                                       String?                          @db.VarChar(255)
+  note                                         String?
+  program_id                                   String                           @db.Uuid
+  participant_id                               String?                          @db.Uuid
+  createdAt                                    DateTime                         @db.Timestamptz(6)
+  updatedAt                                    DateTime                         @db.Timestamptz(6)
+  invoice_id                                   String?                          @db.Uuid
+  checkedin_at                                 DateTime?                        @db.Timestamptz(6)
+  checkedin_by                                 String?                          @db.Uuid
+  purchaser_id                                 String                           @db.Uuid
+  participant_first_name                       String?
+  participant_last_name                        String?
+  participant_email                            String?
+  participant_phone_number                     String?
+  benefit_bookings                             benefit_bookings[]
+  order_items                                  order_items[]
+  users_program_bookings_checkedin_byTousers   users?                           @relation("program_bookings_checkedin_byTousers", fields: [checkedin_by], references: [id])
+  invoices                                     invoices?                        @relation(fields: [invoice_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_program_bookings_participant_idTousers users?                           @relation("program_bookings_participant_idTousers", fields: [participant_id], references: [id])
+  programs                                     programs                         @relation(fields: [program_id], references: [id], onDelete: Cascade)
+  users_program_bookings_purchaser_idTousers   users                            @relation("program_bookings_purchaser_idTousers", fields: [purchaser_id], references: [id], onDelete: SetNull)
+  user_program_package_item_uses               user_program_package_item_uses[]
+
+  @@index([program_id], map: "program_bookings_program_id")
+}
+
+model program_images {
+  id         String    @id @db.Uuid
+  program_id String?   @db.Uuid
+  image_id   String?   @db.Uuid
+  createdAt  DateTime  @db.Timestamptz(6)
+  order      Int?
+  updatedAt  DateTime  @db.Timestamptz(6)
+  assets     assets?   @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+}
+
+model program_inclusions {
+  id          String    @id @db.Uuid
+  description String
+  program_id  String?   @db.Uuid
+  createdAt   DateTime  @db.Timestamptz(6)
+  updatedAt   DateTime  @db.Timestamptz(6)
+  programs    programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+}
+
+model program_internal_tags {
+  id              String         @id @db.Uuid
+  program_id      String?        @db.Uuid
+  internal_tag_id String?        @db.Uuid
+  creator_id      String?        @db.Uuid
+  createdAt       DateTime       @db.Timestamptz(6)
+  updatedAt       DateTime       @db.Timestamptz(6)
+  users           users?         @relation(fields: [creator_id], references: [id])
+  internal_tags   internal_tags? @relation(fields: [internal_tag_id], references: [id], onDelete: Cascade)
+  programs        programs?      @relation(fields: [program_id], references: [id], onDelete: Cascade)
+}
+
+model program_locations {
+  id                 String     @id @db.Uuid
+  public_description String?
+  program_id         String?    @db.Uuid
+  location_id        String?    @db.Uuid
+  createdAt          DateTime   @db.Timestamptz(6)
+  updatedAt          DateTime   @db.Timestamptz(6)
+  show_full_address  Boolean?   @default(false)
+  booked_description String?
+  locations          locations? @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  programs           programs?  @relation(fields: [program_id], references: [id], onDelete: Cascade)
+}
+
+model program_package_items {
+  id                   String              @id @db.Uuid
+  createdAt            DateTime            @db.Timestamptz(6)
+  updatedAt            DateTime            @db.Timestamptz(6)
+  query_id             String?             @db.Uuid
+  program_package_id   String?             @db.Uuid
+  quantity             Int?
+  description          String              @db.VarChar(255)
+  type                 String?             @db.VarChar(255)
+  beneficiary_group_id String?             @db.Uuid
+  beneficiary_groups   beneficiary_groups? @relation(fields: [beneficiary_group_id], references: [id], onDelete: Cascade)
+  program_packages     program_packages?   @relation(fields: [program_package_id], references: [id], onDelete: Cascade)
+  program_queries      program_queries?    @relation(fields: [query_id], references: [id], onDelete: Cascade)
+
+  @@index([program_package_id], map: "program_package_items_program_package_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model program_package_sets {
+  id               String             @id @db.Uuid
+  createdAt        DateTime           @db.Timestamptz(6)
+  updatedAt        DateTime           @db.Timestamptz(6)
+  venue_id         String?            @db.Uuid
+  org_id           String?            @db.Uuid
+  name             String             @db.VarChar(255)
+  visibility       String?            @default("VISIBLE") @db.VarChar(255)
+  description      String?
+  expiration_date  DateTime?          @db.Date
+  orgs             orgs?              @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  venues           venues?            @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+  program_packages program_packages[]
+
+  @@index([venue_id, org_id], map: "program_package_sets_venue_id_org_id")
+}
+
+model program_packages {
+  id                    String                  @id @db.Uuid
+  createdAt             DateTime                @db.Timestamptz(6)
+  updatedAt             DateTime                @db.Timestamptz(6)
+  name                  String                  @db.VarChar(255)
+  order                 Int
+  description           String?
+  price_cents           Decimal                 @db.Decimal
+  redemption_term_days  Int?
+  redemption_date_start DateTime?               @db.Date
+  redemption_date_end   DateTime?               @db.Date
+  expiration_date       DateTime?               @db.Date
+  purchase_status       String?                 @default("PURCHASABLE") @db.VarChar(255)
+  set_id                String?                 @db.Uuid
+  program_package_items program_package_items[]
+  program_package_sets  program_package_sets?   @relation(fields: [set_id], references: [id], onDelete: Cascade)
+  user_program_packages user_program_packages[]
+
+  @@index([set_id], map: "program_packages_set_id")
+}
+
+model program_posts {
+  id         String   @id @db.Uuid
+  program_id String   @db.Uuid
+  post_id    String   @db.Uuid
+  createdAt  DateTime @db.Timestamptz(6)
+  posts      posts    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  programs   programs @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@unique([program_id, post_id], map: "program_posts_program_id_post_id")
+  @@index([program_id, createdAt, id], map: "program_posts_program_id_created_at_id")
+}
+
+model program_products {
+  id         String    @id @db.Uuid
+  program_id String?   @db.Uuid
+  product_id String?   @db.Uuid
+  order      Int?
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  products   products? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@index([program_id], map: "program_products_program_id")
+}
+
+model program_queries {
+  id                         String                       @id @db.Uuid
+  createdAt                  DateTime                     @db.Timestamptz(6)
+  updatedAt                  DateTime                     @db.Timestamptz(6)
+  clubs                      clubs[]
+  pq_names                   pq_names[]
+  pq_org_tags                pq_org_tags[]
+  pq_orgs                    pq_orgs[]
+  pq_participant_price_cents pq_participant_price_cents[]
+  pq_programs                pq_programs[]
+  pq_start_dates             pq_start_dates[]
+  pq_start_dows              pq_start_dows[]
+  pq_start_times             pq_start_times[]
+  pq_types                   pq_types[]
+  pq_venues                  pq_venues[]
+  program_package_items      program_package_items[]
+  user_program_package_items user_program_package_items[]
+}
+
+model program_required_club_memberships {
+  id         String    @id @db.Uuid
+  program_id String?   @db.Uuid
+  club_id    String?   @db.Uuid
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  clubs      clubs?    @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+
+  @@unique([program_id, club_id], map: "program_required_club_memberships_program_id_club_id")
+}
+
+model program_sponsors {
+  id         String    @id @db.Uuid
+  program_id String?   @db.Uuid
+  sponsor_id String?   @db.Uuid
+  order      Int?
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+  sponsors   sponsors? @relation(fields: [sponsor_id], references: [id], onDelete: Cascade)
+
+  @@unique([program_id, sponsor_id], map: "program_sponsors_program_id_sponsor_id")
+}
+
+model program_tags {
+  id         String    @id @db.Uuid
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  creator_id String?   @db.Uuid
+  program_id String?   @db.Uuid
+  tag_id     String?   @db.Uuid
+  users      users?    @relation(fields: [creator_id], references: [id])
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+  org_tags   org_tags? @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@unique([program_id, tag_id], map: "program_tags_program_id_tag_id")
+}
+
+model program_waitlist_users {
+  id         String    @id @db.Uuid
+  program_id String?   @db.Uuid
+  user_id    String?   @db.Uuid
+  notes      String?
+  createdAt  DateTime  @db.Timestamptz(6)
+  updatedAt  DateTime  @db.Timestamptz(6)
+  programs   programs? @relation(fields: [program_id], references: [id], onDelete: Cascade)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([program_id, user_id], map: "program_waitlist_users_program_id_user_id")
+}
+
+model programs {
+  id                                String                              @id @db.Uuid
+  name                              String                              @db.VarChar(255)
+  description                       String
+  date                              DateTime?                           @db.Date
+  start_time                        String?                             @db.VarChar(255)
+  end_time                          String?                             @db.VarChar(255)
+  max_participants                  Int?
+  participant_price_cents           Decimal?                            @db.Decimal
+  cancellation_policy               String?                             @db.VarChar(255)
+  publish_date                      DateTime?                           @db.Date
+  draft                             Boolean                             @default(true)
+  createdAt                         DateTime                            @db.Timestamptz(6)
+  updatedAt                         DateTime                            @db.Timestamptz(6)
+  org_id                            String?                             @db.Uuid
+  type                              String?                             @db.VarChar(255)
+  subtype                           String?                             @db.VarChar(255)
+  pricing_type                      String?                             @db.VarChar(255)
+  hidden                            Boolean?                            @default(false)
+  host_id                           String?                             @db.Uuid
+  info                              Json?
+  read_before_booking               String?
+  min_participants                  Int?                                @default(0)
+  creator_id                        String?                             @db.Uuid
+  tz                                String?                             @db.VarChar
+  club_membership_requirement       String?                             @db.VarChar(255)
+  settings                          Json?
+  allowed_booking_card_brand        String?                             @db.VarChar(255)
+  venue_id                          String?                             @db.Uuid
+  status                            String                              @default("OK") @db.VarChar(255)
+  canceled_at                       DateTime?                           @db.Timestamptz(6)
+  canceled_note                     String?
+  canceler_id                       String?                             @db.Uuid
+  sports                            String[]                            @db.VarChar(255)
+  default_registration_window_id    String?                             @db.Uuid
+  benefit_programs                  benefit_programs[]
+  club_programs                     club_programs[]
+  order_items                       order_items[]
+  pq_programs                       pq_programs[]
+  program_attributes                program_attributes[]
+  program_bookings                  program_bookings[]
+  program_images                    program_images[]
+  program_inclusions                program_inclusions[]
+  program_internal_tags             program_internal_tags[]
+  program_locations                 program_locations[]
+  program_posts                     program_posts[]
+  program_products                  program_products[]
+  program_required_club_memberships program_required_club_memberships[]
+  program_sponsors                  program_sponsors[]
+  program_tags                      program_tags[]
+  program_waitlist_users            program_waitlist_users[]
+  users_programs_canceler_idTousers users?                              @relation("programs_canceler_idTousers", fields: [canceler_id], references: [id])
+  users_programs_creator_idTousers  users?                              @relation("programs_creator_idTousers", fields: [creator_id], references: [id])
+  windows                           windows?                            @relation(fields: [default_registration_window_id], references: [id])
+  users_programs_host_idTousers     users?                              @relation("programs_host_idTousers", fields: [host_id], references: [id])
+  orgs                              orgs?                               @relation(fields: [org_id], references: [id])
+  venues                            venues?                             @relation(fields: [venue_id], references: [id])
+  promo_code_programs               promo_code_programs[]               @ignore
+  res_reservations                  res_reservations[]
+
+  @@index([date], map: "programs_date")
+  @@index([host_id], map: "programs_host_id")
+  @@index([org_id], map: "programs_org_id")
+  @@index([sports], map: "programs_sports_gin_idx", type: Gin)
+  @@index([venue_id], map: "programs_venue_id")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model promo_code_programs {
+  promo_code_id String      @db.Uuid
+  program_id    String      @db.Uuid
+  createdAt     DateTime    @db.Timestamptz(6)
+  updatedAt     DateTime    @db.Timestamptz(6)
+  programs      programs    @relation(fields: [program_id], references: [id], onDelete: Cascade)
+  promo_codes   promo_codes @relation(fields: [promo_code_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model promo_code_skus {
+  id            String       @id @db.Uuid
+  sku           String?      @db.VarChar(255)
+  promo_code_id String?      @db.Uuid
+  createdAt     DateTime     @db.Timestamptz(6)
+  updatedAt     DateTime     @db.Timestamptz(6)
+  promo_codes   promo_codes? @relation(fields: [promo_code_id], references: [id], onDelete: Cascade)
+
+  @@unique([promo_code_id, sku], map: "promo_code_skus_promo_code_id_sku")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model promo_code_users {
+  promo_code_id String      @db.Uuid
+  user_id       String?     @db.Uuid
+  createdAt     DateTime    @db.Timestamptz(6)
+  updatedAt     DateTime    @db.Timestamptz(6)
+  promo_codes   promo_codes @relation(fields: [promo_code_id], references: [id], onDelete: Cascade)
+  users         users?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model promo_code_uses {
+  id            String      @id @db.Uuid
+  promo_code_id String      @db.Uuid
+  user_id       String?     @db.Uuid
+  invoice_id    String?     @db.Uuid
+  createdAt     DateTime    @db.Timestamptz(6)
+  updatedAt     DateTime    @db.Timestamptz(6)
+  invoices      invoices?   @relation(fields: [invoice_id], references: [id])
+  promo_codes   promo_codes @relation(fields: [promo_code_id], references: [id], onDelete: Cascade)
+  users         users?      @relation(fields: [user_id], references: [id])
+}
+
+model promo_codes {
+  id                        String                @id @db.Uuid
+  code                      String?               @unique(map: "promo_codes_code") @db.VarChar(255)
+  note                      String?
+  valid_from                DateTime?             @db.Timestamptz(6)
+  valid_to                  DateTime?             @db.Timestamptz(6)
+  discount_cents            Decimal?              @db.Decimal
+  max_total_uses            Int?
+  max_user_uses             Int?                  @default(1)
+  first_purchase_only       Boolean?
+  entire_invoice_applicable Boolean?              @default(false)
+  active                    Boolean?              @default(true)
+  createdAt                 DateTime              @db.Timestamptz(6)
+  updatedAt                 DateTime              @db.Timestamptz(6)
+  discount_percent          Decimal?              @db.Decimal
+  line_items                line_items[]
+  promo_code_programs       promo_code_programs[] @ignore
+  promo_code_skus           promo_code_skus[]
+  promo_code_users          promo_code_users[]    @ignore
+  promo_code_uses           promo_code_uses[]
+}
+
+model purchasable_permits {
+  id           String         @id @db.Uuid
+  name         String?        @db.VarChar(255)
+  sku          String?        @db.VarChar(255)
+  price_cents  Decimal?       @db.Decimal
+  status       String?        @db.VarChar(255)
+  createdAt    DateTime       @db.Timestamptz(6)
+  updatedAt    DateTime       @db.Timestamptz(6)
+  user_permits user_permits[]
+}
+
+model quiz_answers {
+  id                      String                    @id @db.Uuid
+  question_id             String?                   @db.Uuid
+  answer                  String?
+  order                   Int?
+  active                  Boolean?                  @default(true)
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  quiz_questions          quiz_questions?           @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  quiz_submission_answers quiz_submission_answers[]
+
+  @@unique([question_id, answer], map: "quiz_answers_question_id_answer")
+  @@unique([question_id, answer], map: "quiz_answers_question_id_answer_uk")
+}
+
+model quiz_questions {
+  id                      String                    @id @db.Uuid
+  quiz_id                 String?                   @db.Uuid
+  question                String?
+  order                   Int?
+  active                  Boolean?                  @default(true)
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  quiz_answers            quiz_answers[]
+  quizzes                 quizzes?                  @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  quiz_submission_answers quiz_submission_answers[]
+
+  @@unique([quiz_id, question], map: "quiz_questions_quiz_id_question")
+  @@unique([quiz_id, question], map: "quiz_questions_quiz_id_question_uk")
+}
+
+model quiz_submission_answers {
+  id               String            @id @db.Uuid
+  submission_id    String?           @db.Uuid
+  question_id      String?           @db.Uuid
+  answer_id        String?           @db.Uuid
+  question         String?
+  answer           String?
+  question_order   Int?
+  quiz_answers     quiz_answers?     @relation(fields: [answer_id], references: [id])
+  quiz_questions   quiz_questions?   @relation(fields: [question_id], references: [id])
+  quiz_submissions quiz_submissions? @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+}
+
+model quiz_submissions {
+  id                      String                    @id @db.Uuid
+  quiz_id                 String?                   @db.Uuid
+  user_id                 String?                   @db.Uuid
+  quiz_name               String?                   @db.VarChar(255)
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  quiz_submission_answers quiz_submission_answers[]
+  quizzes                 quizzes?                  @relation(fields: [quiz_id], references: [id])
+  users                   users?                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model quizzes {
+  id                  String                @id @db.Uuid
+  name                String?               @db.VarChar(255)
+  active              Boolean?              @default(true)
+  createdAt           DateTime              @db.Timestamptz(6)
+  updatedAt           DateTime              @db.Timestamptz(6)
+  player_profile_quiz player_profile_quiz[] @ignore
+  quiz_questions      quiz_questions[]
+  quiz_submissions    quiz_submissions[]
+}
+
+model refunds {
+  id                       String    @id @db.Uuid
+  amount_cents             Decimal?  @db.Decimal
+  reason                   String?
+  payment_id               String?   @db.Uuid
+  initiator_id             String?   @db.Uuid
+  stripe_refund_id         String?   @db.VarChar(255)
+  stripe_payment_intent_id String?   @db.VarChar(255)
+  info                     Json?
+  createdAt                DateTime  @db.Timestamptz(6)
+  updatedAt                DateTime  @db.Timestamptz(6)
+  users                    users?    @relation(fields: [initiator_id], references: [id])
+  payments                 payments? @relation(fields: [payment_id], references: [id])
+}
+
+model res_finite_schedules {
+  id            String         @id @db.Uuid
+  createdAt     DateTime       @db.Timestamptz(6)
+  updatedAt     DateTime       @db.Timestamptz(6)
+  resource_id   String?        @db.Uuid
+  schedule_id   String?        @db.Uuid
+  date_start    DateTime       @db.Date
+  date_end      DateTime       @db.Date
+  resources     resources?     @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+  res_schedules res_schedules? @relation(fields: [schedule_id], references: [id], onDelete: Cascade)
+
+  @@index([resource_id], map: "res_finite_schedules_resource_id")
+}
+
+model res_reservations {
+  id          String        @id @db.Uuid
+  createdAt   DateTime      @db.Timestamptz(6)
+  updatedAt   DateTime      @db.Timestamptz(6)
+  resource_id String?       @db.Uuid
+  program_id  String?       @db.Uuid
+  date_start  DateTime?     @db.Date
+  date_end    DateTime?     @db.Date
+  wall_start  DateTime?     @db.Time(6)
+  wall_end    DateTime?     @db.Time(6)
+  notes       String?
+  order_items order_items[]
+  programs    programs?     @relation(fields: [program_id], references: [id], onDelete: Cascade)
+  resources   resources?    @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+
+  @@index([program_id], map: "res_reservations_program_id")
+  @@index([resource_id], map: "res_reservations_resource_id")
+}
+
+model res_schedule_hours {
+  id                 String         @id @db.Uuid
+  createdAt          DateTime       @db.Timestamptz(6)
+  updatedAt          DateTime       @db.Timestamptz(6)
+  schedule_id        String?        @db.Uuid
+  day_of_week        String?
+  wall_start         DateTime?      @db.Time(6)
+  wall_end           DateTime?      @db.Time(6)
+  hourly_price_cents Decimal?       @db.Decimal
+  res_schedules      res_schedules? @relation(fields: [schedule_id], references: [id], onDelete: Cascade)
+
+  @@index([schedule_id], map: "res_schedule_hours_schedule_id")
+}
+
+model res_schedules {
+  id                   String                 @id @db.Uuid
+  createdAt            DateTime               @db.Timestamptz(6)
+  updatedAt            DateTime               @db.Timestamptz(6)
+  creator_id           String?                @db.Uuid
+  venue_id             String?                @db.Uuid
+  name                 String?
+  notes                String?
+  res_finite_schedules res_finite_schedules[]
+  res_schedule_hours   res_schedule_hours[]
+  users                users?                 @relation(fields: [creator_id], references: [id])
+  venues               venues?                @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+  resources            resources[]
+
+  @@index([venue_id], map: "res_schedules_venue_id")
+}
+
+model res_special_hours {
+  id                 String     @id @db.Uuid
+  createdAt          DateTime   @db.Timestamptz(6)
+  updatedAt          DateTime   @db.Timestamptz(6)
+  resource_id        String?    @db.Uuid
+  date               DateTime?  @db.Date
+  wall_start         DateTime?  @db.Time(6)
+  wall_end           DateTime?  @db.Time(6)
+  is_all_day         Boolean?
+  is_closed          Boolean?
+  hourly_price_cents Decimal?   @db.Decimal
+  notes              String?
+  resources          resources? @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+
+  @@index([resource_id, date], map: "res_special_hours_resource_id_date")
+}
+
+model res_types {
+  name          String      @id @unique(map: "res_types_name") @db.VarChar(255)
+  label         String?
+  description   String?
+  category_name String?
+  sport         String?     @db.VarChar(255)
+  resources     resources[]
+}
+
+model resources {
+  id                                String                              @id @db.Uuid
+  createdAt                         DateTime                            @db.Timestamptz(6)
+  updatedAt                         DateTime                            @db.Timestamptz(6)
+  venue_id                          String?                             @db.Uuid
+  name                              String?
+  type                              String?                             @db.VarChar(255)
+  min_capacity                      Int?
+  max_capacity                      Int?
+  notes                             String?
+  schedule_id                       String?                             @db.Uuid
+  pricing_type                      String?                             @db.VarChar(255)
+  base_hourly_price_cents           Decimal?                            @db.Decimal
+  default_availability_window_id    String?                             @db.Uuid
+  benefit_blocks                    benefit_blocks[]
+  benefit_venue_permitted_resources benefit_venue_permitted_resources[]
+  order_items                       order_items[]
+  res_finite_schedules              res_finite_schedules[]
+  res_reservations                  res_reservations[]
+  res_special_hours                 res_special_hours[]
+  windows                           windows?                            @relation(fields: [default_availability_window_id], references: [id])
+  res_schedules                     res_schedules?                      @relation(fields: [schedule_id], references: [id])
+  res_types                         res_types?                          @relation(fields: [type], references: [name])
+  venues                            venues?                             @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([venue_id, type], map: "resources_venue_id_type")
+}
+
+model role_perms {
+  id        String   @id @db.Uuid
+  role_id   String?  @db.Uuid
+  perm      String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  perms     perms?   @relation(fields: [perm], references: [name], onDelete: Cascade)
+  roles     roles?   @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@index([role_id, perm], map: "role_perms_role_id_perm")
+}
+
+model roles {
+  id                           String                         @id @db.Uuid
+  name                         String                         @db.VarChar(255)
+  description                  String?                        @db.VarChar(255)
+  system_code                  String?                        @db.VarChar(255)
+  org_id                       String?                        @db.Uuid
+  createdAt                    DateTime                       @db.Timestamptz(6)
+  updatedAt                    DateTime                       @db.Timestamptz(6)
+  role_perms                   role_perms[]
+  orgs                         orgs?                          @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  subscription_plan_provisions subscription_plan_provisions[]
+  subscription_provisions      subscription_provisions[]
+  user_roles                   user_roles[]
+
+  @@unique([org_id, name], map: "roles_org_id_name")
+}
+
+model saas_requests {
+  id           String   @id @db.Uuid
+  info         Json?
+  requester_id String?  @db.Uuid
+  club_id      String?  @db.Uuid
+  createdAt    DateTime @db.Timestamptz(6)
+  updatedAt    DateTime @db.Timestamptz(6)
+  clubs        clubs?   @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  users        users?   @relation(fields: [requester_id], references: [id], onDelete: Cascade)
+}
+
+model shipping_addresses {
+  id             String   @id @db.Uuid
+  user_id        String?  @db.Uuid
+  recipient_name String?  @db.VarChar(255)
+  company_name   String?  @db.VarChar(255)
+  line1          String?  @db.VarChar(255)
+  line2          String?  @db.VarChar(255)
+  postcode       String?  @db.VarChar(255)
+  city           String?  @db.VarChar(255)
+  state          String?  @db.VarChar(255)
+  country        String?  @db.VarChar(255)
+  phone_number   String?  @db.VarChar(255)
+  createdAt      DateTime @db.Timestamptz(6)
+  updatedAt      DateTime @db.Timestamptz(6)
+  orders         orders[]
+  users          users?   @relation(fields: [user_id], references: [id])
+
+  @@index([user_id], map: "shipping_addresses_user_id")
+}
+
+model sponsors {
+  id                              String             @id @db.Uuid
+  name                            String?            @db.VarChar(255)
+  notes                           String?
+  org_id                          String?            @db.Uuid
+  logo_id                         String?            @db.Uuid
+  icon_id                         String?            @db.Uuid
+  creator_id                      String?            @db.Uuid
+  createdAt                       DateTime           @db.Timestamptz(6)
+  updatedAt                       DateTime           @db.Timestamptz(6)
+  link                            String?
+  club_sponsors                   club_sponsors[]
+  program_sponsors                program_sponsors[]
+  users                           users?             @relation(fields: [creator_id], references: [id])
+  assets_sponsors_icon_idToassets assets?            @relation("sponsors_icon_idToassets", fields: [icon_id], references: [id])
+  assets_sponsors_logo_idToassets assets?            @relation("sponsors_logo_idToassets", fields: [logo_id], references: [id])
+  orgs                            orgs?              @relation(fields: [org_id], references: [id], onDelete: Cascade)
+
+  @@index([org_id], map: "sponsors_org_id")
+}
+
+model subscription_invoices {
+  id              String         @id @db.Uuid
+  subscription_id String?        @db.Uuid
+  invoice_id      String?        @db.Uuid
+  createdAt       DateTime       @db.Timestamptz(6)
+  updatedAt       DateTime       @db.Timestamptz(6)
+  invoices        invoices?      @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  subscriptions   subscriptions? @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+
+  @@index([subscription_id], map: "subscription_invoices_subscription_id")
+}
+
+model subscription_plan_provisions {
+  id                 String              @id @db.Uuid
+  plan_id            String?             @db.Uuid
+  role_id            String?             @db.Uuid
+  createdAt          DateTime            @db.Timestamptz(6)
+  updatedAt          DateTime            @db.Timestamptz(6)
+  subscription_plans subscription_plans? @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  roles              roles?              @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([plan_id, role_id], map: "subscription_plan_provisions_plan_id_role_id")
+}
+
+model subscription_plans {
+  id                           String                         @id @db.Uuid
+  system_code                  String?                        @db.VarChar(255)
+  org_id                       String?                        @db.Uuid
+  name                         String                         @db.VarChar(255)
+  description                  String?                        @db.VarChar(255)
+  internal_notes               String?
+  status                       String?                        @db.VarChar(255)
+  billing_interval             String?                        @db.VarChar(255)
+  price_cents                  Decimal?                       @db.Decimal
+  trial_days                   Int?
+  creator_id                   String?                        @db.Uuid
+  createdAt                    DateTime                       @db.Timestamptz(6)
+  updatedAt                    DateTime                       @db.Timestamptz(6)
+  subscription_plan_provisions subscription_plan_provisions[]
+  users                        users?                         @relation(fields: [creator_id], references: [id])
+  orgs                         orgs?                          @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  subscriptions                subscriptions[]
+
+  @@index([org_id], map: "subscription_plans_org_id")
+}
+
+model subscription_provisions {
+  id              String         @id @db.Uuid
+  status          String?        @db.VarChar(255)
+  subscription_id String?        @db.Uuid
+  role_id         String?        @db.Uuid
+  createdAt       DateTime       @db.Timestamptz(6)
+  updatedAt       DateTime       @db.Timestamptz(6)
+  roles           roles?         @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  subscriptions   subscriptions? @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+
+  @@unique([subscription_id, role_id], map: "subscription_provisions_subscription_id_role_id")
+  @@index([status], map: "subscription_provisions_status")
+}
+
+model subscriptions {
+  id                      String                    @id @db.Uuid
+  plan_id                 String?                   @db.Uuid
+  subscriber_id           String?                   @db.Uuid
+  payment_method_id       String                    @db.Uuid
+  internal_notes          String?
+  name                    String?                   @db.VarChar(255)
+  description             String?                   @db.VarChar(255)
+  start                   DateTime?                 @db.Timestamptz(6)
+  end                     DateTime?                 @db.Timestamptz(6)
+  billing_interval        String?                   @db.VarChar(255)
+  next_bill_date          DateTime?                 @db.Timestamptz(6)
+  price_cents             Decimal?                  @db.Decimal
+  trial_end               DateTime?                 @db.Timestamptz(6)
+  status                  String?                   @db.VarChar(255)
+  provisioned_status      String?                   @db.VarChar(255)
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  subscription_invoices   subscription_invoices[]
+  subscription_provisions subscription_provisions[]
+  payment_methods         payment_methods           @relation(fields: [payment_method_id], references: [id], onDelete: SetNull)
+  subscription_plans      subscription_plans?       @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  users                   users?                    @relation(fields: [subscriber_id], references: [id], onDelete: Cascade)
+
+  @@unique([plan_id, subscriber_id], map: "subscriptions_plan_id_subscriber_id")
+  @@index([status], map: "subscriptions_status")
+  @@index([subscriber_id], map: "subscriptions_subscriber_id")
+}
+
+model transfers {
+  id                       String   @id @db.Uuid
+  createdAt                DateTime @db.Timestamptz(6)
+  updatedAt                DateTime @db.Timestamptz(6)
+  org_id                   String   @db.Uuid
+  invoice_id               String   @db.Uuid
+  stripe_transfer_id       String?  @db.VarChar(255)
+  amount_transferred_cents Int?
+  status                   String?  @db.VarChar(255)
+  info                     Json?    @db.Json
+  note                     String?  @db.VarChar(255)
+  invoices                 invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  orgs                     orgs     @relation(fields: [org_id], references: [id], onDelete: Cascade)
+
+  @@index([invoice_id], map: "transfers_invoice_id")
+  @@index([org_id], map: "transfers_org_id")
+}
+
+model user_interested_play_locations {
+  id              String   @id @db.Uuid
+  createdAt       DateTime @db.Timestamptz(6)
+  updatedAt       DateTime @db.Timestamptz(6)
+  user_id         String?  @db.Uuid
+  google_place_id String?  @db.VarChar(255)
+  country         String?  @db.VarChar(255)
+  region          String?  @db.VarChar(255)
+  city            String?  @db.VarChar(255)
+  lat             Float?
+  lon             Float?
+  info            Json?
+  users           users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([city], map: "user_interested_play_locations_city")
+  @@index([user_id], map: "user_interested_play_locations_user_id")
+}
+
+model user_package_item_beneficiary_group_uses {
+  id                         String                      @id @db.Uuid
+  createdAt                  DateTime                    @db.Timestamptz(6)
+  updatedAt                  DateTime                    @db.Timestamptz(6)
+  user_package_item_id       String?                     @db.Uuid
+  beneficiary_group_user_id  String?                     @db.Uuid
+  beneficiary_group_users    beneficiary_group_users?    @relation(fields: [beneficiary_group_user_id], references: [id], onDelete: Cascade, map: "user_package_item_beneficiary_gr_beneficiary_group_user_id_fkey")
+  user_program_package_items user_program_package_items? @relation(fields: [user_package_item_id], references: [id], onDelete: Cascade, map: "user_package_item_beneficiary_group_u_user_package_item_id_fkey")
+
+  @@unique([user_package_item_id, beneficiary_group_user_id], map: "user_package_item_beneficiary_group_uses_user_package_item_id_b")
+}
+
+model user_password_resets {
+  id        String   @id @db.Uuid
+  user_id   String?  @unique(map: "user_password_resets_user_id") @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  users     users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model user_permits {
+  id                                                      String               @id @db.Uuid
+  permit_id                                               String?              @db.Uuid
+  permit_info                                             Json?
+  application_status                                      String?              @db.VarChar(255)
+  payment_status                                          String?              @db.VarChar(255)
+  scraper_status                                          String?              @db.VarChar(255)
+  fulfillment_status                                      String?              @db.VarChar(255)
+  scraper_started_date                                    DateTime?            @db.Timestamptz(6)
+  manual_fulfillment_date                                 DateTime?            @db.Timestamptz(6)
+  nyc_permit_confirmation_email_received                  Boolean?             @default(false)
+  internal_notes                                          String?
+  nyc_permit_account_id                                   String?              @db.Uuid
+  nyc_permit_card_id                                      String?              @db.Uuid
+  invoice_id                                              String?              @db.Uuid
+  user_id                                                 String?              @db.Uuid
+  app_first_name                                          String?              @db.VarChar(255)
+  app_middle_initial                                      String?              @db.VarChar(255)
+  app_last_name                                           String?              @db.VarChar(255)
+  app_birthdate                                           DateTime?            @db.Date
+  app_address_line_1                                      String?
+  app_address_line_2                                      String?
+  app_address_city                                        String?
+  app_address_state                                       String?
+  app_address_zipcode                                     String?
+  app_address_country                                     String?
+  app_phone_number                                        String?
+  app_idnyc_number                                        String?
+  app_permit_photo_id                                     String?              @db.Uuid
+  app_identification_photo_id                             String?              @db.Uuid
+  app_idnyc_photo_id                                      String?              @db.Uuid
+  createdAt                                               DateTime             @db.Timestamptz(6)
+  updatedAt                                               DateTime             @db.Timestamptz(6)
+  manual_fulfiller_id                                     String?              @db.Uuid
+  app_email                                               String?
+  order_items                                             order_items[]
+  assets_user_permits_app_identification_photo_idToassets assets?              @relation("user_permits_app_identification_photo_idToassets", fields: [app_identification_photo_id], references: [id])
+  assets_user_permits_app_idnyc_photo_idToassets          assets?              @relation("user_permits_app_idnyc_photo_idToassets", fields: [app_idnyc_photo_id], references: [id])
+  assets_user_permits_app_permit_photo_idToassets         assets?              @relation("user_permits_app_permit_photo_idToassets", fields: [app_permit_photo_id], references: [id])
+  invoices                                                invoices?            @relation(fields: [invoice_id], references: [id])
+  users_user_permits_manual_fulfiller_idTousers           users?               @relation("user_permits_manual_fulfiller_idTousers", fields: [manual_fulfiller_id], references: [id])
+  nyc_permit_accounts                                     nyc_permit_accounts? @relation(fields: [nyc_permit_account_id], references: [id])
+  nyc_permit_cards                                        nyc_permit_cards?    @relation(fields: [nyc_permit_card_id], references: [id])
+  purchasable_permits                                     purchasable_permits? @relation(fields: [permit_id], references: [id])
+  users_user_permits_user_idTousers                       users?               @relation("user_permits_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([invoice_id], map: "user_permits_invoice_id")
+  @@index([nyc_permit_account_id], map: "user_permits_nyc_permit_account_id")
+  @@index([nyc_permit_card_id], map: "user_permits_nyc_permit_card_id")
+  @@index([permit_id], map: "user_permits_permit_id")
+  @@index([scraper_status], map: "user_permits_scraper_status")
+  @@index([user_id], map: "user_permits_user_id")
+}
+
+model user_profile_attribute_settings {
+  id           String      @id @db.Uuid
+  attribute_id String?     @db.Uuid
+  required     Boolean?    @default(false)
+  createdAt    DateTime    @db.Timestamptz(6)
+  updatedAt    DateTime    @db.Timestamptz(6)
+  attributes   attributes? @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+
+  @@index([attribute_id], map: "user_profile_attribute_settings_attribute_id")
+}
+
+model user_profile_attributes {
+  id                 String            @id @db.Uuid
+  user_id            String?           @db.Uuid
+  attribute_id       String?           @db.Uuid
+  attribute_value_id String?           @db.Uuid
+  createdAt          DateTime          @db.Timestamptz(6)
+  updatedAt          DateTime          @db.Timestamptz(6)
+  attributes         attributes?       @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  attribute_values   attribute_values? @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade)
+  users              users?            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([attribute_id, attribute_value_id], map: "user_profile_attributes_attribute_id_attribute_value_id")
+  @@index([user_id], map: "user_profile_attributes_user_id")
+}
+
+model user_program_package_item_uses {
+  id                         String                      @id @db.Uuid
+  createdAt                  DateTime                    @db.Timestamptz(6)
+  updatedAt                  DateTime                    @db.Timestamptz(6)
+  user_package_item_id       String?                     @db.Uuid
+  booking_id                 String?                     @db.Uuid
+  program_bookings           program_bookings?           @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  user_program_package_items user_program_package_items? @relation(fields: [user_package_item_id], references: [id], onDelete: Cascade, map: "user_program_package_item_uses_user_item_id_fkey")
+
+  @@index([booking_id], map: "user_program_package_item_uses_booking_id")
+  @@index([user_package_item_id], map: "user_program_package_item_uses_user_item_id")
+}
+
+model user_program_package_items {
+  id                                       String                                     @id @db.Uuid
+  createdAt                                DateTime                                   @db.Timestamptz(6)
+  updatedAt                                DateTime                                   @db.Timestamptz(6)
+  query_id                                 String?                                    @db.Uuid
+  user_program_package_id                  String?                                    @db.Uuid
+  quantity                                 Int?
+  description                              String                                     @db.VarChar(255)
+  type                                     String?                                    @db.VarChar(255)
+  beneficiary_group_id                     String?                                    @db.Uuid
+  user_package_item_beneficiary_group_uses user_package_item_beneficiary_group_uses[]
+  user_program_package_item_uses           user_program_package_item_uses[]
+  beneficiary_groups                       beneficiary_groups?                        @relation(fields: [beneficiary_group_id], references: [id])
+  program_queries                          program_queries?                           @relation(fields: [query_id], references: [id], onDelete: Cascade)
+  user_program_packages                    user_program_packages?                     @relation(fields: [user_program_package_id], references: [id], onDelete: Cascade)
+
+  @@index([user_program_package_id], map: "user_program_package_items_user_program_package_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_program_packages {
+  id                                              String                       @id @db.Uuid
+  createdAt                                       DateTime                     @db.Timestamptz(6)
+  updatedAt                                       DateTime                     @db.Timestamptz(6)
+  org_id                                          String?                      @db.Uuid
+  venue_id                                        String?                      @db.Uuid
+  program_package_id                              String?                      @db.Uuid
+  name                                            String                       @db.VarChar(255)
+  description                                     String?
+  price_cents                                     Decimal                      @db.Decimal
+  redemption_term_days                            Int?
+  redemption_date_start                           DateTime?                    @db.Date
+  redemption_date_end                             DateTime?                    @db.Date
+  status                                          String?                      @default("ACTIVE") @db.VarChar(255)
+  user_id                                         String?                      @db.Uuid
+  purchaser_id                                    String?                      @db.Uuid
+  canceler_id                                     String?                      @db.Uuid
+  canceled_note                                   String?
+  canceled_at                                     DateTime?                    @db.Timestamptz(6)
+  order_items                                     order_items[]
+  user_program_package_items                      user_program_package_items[]
+  users_user_program_packages_canceler_idTousers  users?                       @relation("user_program_packages_canceler_idTousers", fields: [canceler_id], references: [id])
+  orgs                                            orgs?                        @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  program_packages                                program_packages?            @relation(fields: [program_package_id], references: [id])
+  users_user_program_packages_purchaser_idTousers users?                       @relation("user_program_packages_purchaser_idTousers", fields: [purchaser_id], references: [id])
+  users_user_program_packages_user_idTousers      users?                       @relation("user_program_packages_user_idTousers", fields: [user_id], references: [id])
+  venues                                          venues?                      @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([program_package_id], map: "user_program_packages_program_package_id")
+  @@index([purchaser_id], map: "user_program_packages_purchaser_id")
+  @@index([user_id], map: "user_program_packages_user_id")
+}
+
+model user_roles {
+  id                                 String   @id @db.Uuid
+  user_id                            String?  @db.Uuid
+  role_id                            String?  @db.Uuid
+  creator_id                         String?  @db.Uuid
+  src                                String?  @db.VarChar(255)
+  createdAt                          DateTime @db.Timestamptz(6)
+  updatedAt                          DateTime @db.Timestamptz(6)
+  users_user_roles_creator_idTousers users?   @relation("user_roles_creator_idTousers", fields: [creator_id], references: [id])
+  roles                              roles?   @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  users_user_roles_user_idTousers    users?   @relation("user_roles_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, user_id], map: "user_roles_role_id_user_id")
+  @@index([user_id], map: "user_roles_user_id")
+}
+
+model user_sessions {
+  id         String   @id @db.Uuid
+  user_id    String?  @db.Uuid
+  session_id String?  @unique(map: "user_sessions_session_id") @db.Uuid
+  data       Json?
+  ip_address String?  @db.VarChar(255)
+  user_agent String?  @db.VarChar(255)
+  last_href  String?
+  last_seen  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @db.Timestamptz(6)
+  users      users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([last_seen], map: "user_sessions_last_seen")
+  @@index([user_id], map: "user_sessions_user_id")
+}
+
+model user_settings {
+  id                        String   @id @db.Uuid
+  user_id                   String?  @unique(map: "user_settings_user_id") @db.Uuid
+  app_notifications_enabled Boolean?
+  createdAt                 DateTime @db.Timestamptz(6)
+  updatedAt                 DateTime @db.Timestamptz(6)
+  users                     users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id                                                              String                           @id @db.Uuid
+  name                                                            String?                          @db.VarChar(255)
+  email                                                           String                           @unique @db.VarChar(255)
+  number                                                          String?                          @db.VarChar(255)
+  hash                                                            String?                          @db.VarChar(255)
+  passwordToken                                                   String?                          @db.VarChar(255)
+  passwordTokenCreatedDate                                        DateTime?                        @db.Timestamptz(6)
+  token                                                           String?                          @db.VarChar(255)
+  type                                                            String?                          @db.VarChar(255)
+  createdAt                                                       DateTime                         @db.Timestamptz(6)
+  updatedAt                                                       DateTime                         @db.Timestamptz(6)
+  firstName                                                       String?                          @db.VarChar(255)
+  lastName                                                        String?                          @db.VarChar(255)
+  stripe_customer_id                                              String?                          @db.VarChar(255)
+  player_level                                                    String?                          @db.VarChar(255)
+  gender                                                          String?                          @db.VarChar(255)
+  birthdate                                                       DateTime?                        @db.Timestamptz(6)
+  location                                                        String?
+  occupation                                                      String?
+  profile_image_id                                                String?                          @db.Uuid
+  sendbird_user_id                                                String?                          @db.VarChar(255)
+  eqx_member_id                                                   String?                          @unique(map: "users_eqx_member_id")
+  eqx_info                                                        Json?                            @default("{}")
+  assets_assets_creator_idTousers                                 assets[]                         @relation("assets_creator_idTousers")
+  benefit_venue_tags                                              benefit_venue_tags[]
+  benefits                                                        benefits[]
+  blocked_users_blocked_users_blocked_user_idTousers              blocked_users[]                  @relation("blocked_users_blocked_user_idTousers")
+  blocked_users_blocked_users_user_idTousers                      blocked_users[]                  @relation("blocked_users_user_idTousers")
+  cecs                                                            cecs[]
+  club_members                                                    club_members[]
+  clubs                                                           clubs[]
+  comments                                                        comments[]
+  connect_invites_connect_invites_invitee_idTousers               connect_invites[]                @relation("connect_invites_invitee_idTousers")
+  connect_invites_connect_invites_inviter_idTousers               connect_invites[]                @relation("connect_invites_inviter_idTousers")
+  custom_landing_pages                                            custom_landing_pages[]
+  customers                                                       customers[]
+  fee_rules                                                       fee_rules[]
+  internal_tags                                                   internal_tags[]
+  invoices                                                        invoices[]
+  lesson_requests                                                 lesson_requests[]
+  nyc_permit_accounts                                             nyc_permit_accounts[]
+  nyc_permit_cards                                                nyc_permit_cards[]
+  orders                                                          orders[]
+  org_members                                                     org_members[]
+  org_tags                                                        org_tags[]
+  ott_auth_requests                                               ott_auth_requests[]
+  payment_methods                                                 payment_methods[]
+  payments                                                        payments[]
+  posts                                                           posts[]
+  pro_pages                                                       pro_pages?
+  product_variant_stock                                           product_variant_stock[]
+  products                                                        products[]
+  program_bookings_program_bookings_checkedin_byTousers           program_bookings[]               @relation("program_bookings_checkedin_byTousers")
+  program_bookings_program_bookings_participant_idTousers         program_bookings[]               @relation("program_bookings_participant_idTousers")
+  program_bookings_program_bookings_purchaser_idTousers           program_bookings[]               @relation("program_bookings_purchaser_idTousers")
+  program_internal_tags                                           program_internal_tags[]
+  program_tags                                                    program_tags[]
+  program_waitlist_users                                          program_waitlist_users[]
+  programs_programs_canceler_idTousers                            programs[]                       @relation("programs_canceler_idTousers")
+  programs_programs_creator_idTousers                             programs[]                       @relation("programs_creator_idTousers")
+  programs_programs_host_idTousers                                programs[]                       @relation("programs_host_idTousers")
+  promo_code_users                                                promo_code_users[]               @ignore
+  promo_code_uses                                                 promo_code_uses[]
+  quiz_submissions                                                quiz_submissions[]
+  refunds                                                         refunds[]
+  res_schedules                                                   res_schedules[]
+  saas_requests                                                   saas_requests[]
+  shipping_addresses                                              shipping_addresses[]
+  sponsors                                                        sponsors[]
+  subscription_plans                                              subscription_plans[]
+  subscriptions                                                   subscriptions[]
+  user_interested_play_locations                                  user_interested_play_locations[]
+  user_password_resets                                            user_password_resets?
+  user_permits_user_permits_manual_fulfiller_idTousers            user_permits[]                   @relation("user_permits_manual_fulfiller_idTousers")
+  user_permits_user_permits_user_idTousers                        user_permits[]                   @relation("user_permits_user_idTousers")
+  user_profile_attributes                                         user_profile_attributes[]
+  user_program_packages_user_program_packages_canceler_idTousers  user_program_packages[]          @relation("user_program_packages_canceler_idTousers")
+  user_program_packages_user_program_packages_purchaser_idTousers user_program_packages[]          @relation("user_program_packages_purchaser_idTousers")
+  user_program_packages_user_program_packages_user_idTousers      user_program_packages[]          @relation("user_program_packages_user_idTousers")
+  user_roles_user_roles_creator_idTousers                         user_roles[]                     @relation("user_roles_creator_idTousers")
+  user_roles_user_roles_user_idTousers                            user_roles[]                     @relation("user_roles_user_idTousers")
+  user_sessions                                                   user_sessions[]
+  user_settings                                                   user_settings?
+  assets_users_profile_image_idToassets                           assets?                          @relation("users_profile_image_idToassets", fields: [profile_image_id], references: [id])
+  venue_homepages                                                 venue_homepages[]
+  venue_team_members                                              venue_team_members[]
+
+  @@index([eqx_info], map: "users_eqx_info", type: Gin)
+}
+
+model variant_option_values {
+  id                            String                          @id @db.Uuid
+  variant_option_id             String?                         @db.Uuid
+  name                          String?                         @db.VarChar(255)
+  order                         Int?
+  createdAt                     DateTime                        @db.Timestamptz(6)
+  updatedAt                     DateTime                        @db.Timestamptz(6)
+  product_variant_option_values product_variant_option_values[]
+  variant_options               variant_options?                @relation(fields: [variant_option_id], references: [id], onDelete: Cascade)
+
+  @@index([variant_option_id], map: "variant_option_values_variant_option_id")
+}
+
+model variant_options {
+  id                    String                  @id @db.Uuid
+  org_id                String?                 @db.Uuid
+  name                  String?                 @db.VarChar(255)
+  createdAt             DateTime                @db.Timestamptz(6)
+  updatedAt             DateTime                @db.Timestamptz(6)
+  variant_option_values variant_option_values[]
+  orgs                  orgs?                   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+
+  @@index([org_id], map: "variant_options_org_id")
+}
+
+model venue_available_lessons {
+  id            String   @id @db.Uuid
+  createdAt     DateTime @db.Timestamptz(6)
+  updatedAt     DateTime @db.Timestamptz(6)
+  venue_id      String?  @db.Uuid
+  sport         String?  @db.VarChar(255)
+  notify_emails String[] @db.VarChar(255)
+  venues        venues?  @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([venue_id], map: "venue_available_lessons_venue_id")
+}
+
+model venue_customers {
+  id                    String                  @id @db.Uuid
+  createdAt             DateTime                @db.Timestamptz(6)
+  updatedAt             DateTime                @db.Timestamptz(6)
+  org_customer_id       String?                 @db.Uuid
+  venue_id              String?                 @db.Uuid
+  customers             customers?              @relation(fields: [org_customer_id], references: [id], onDelete: Cascade)
+  venues                venues?                 @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+  venue_lesson_requests venue_lesson_requests[]
+
+  @@unique([org_customer_id, venue_id], map: "venue_customers_org_customer_id_venue_id")
+  @@index([venue_id], map: "venue_customers_venue_id")
+}
+
+model venue_homepage_callouts {
+  id              String           @id @db.Uuid
+  createdAt       DateTime         @db.Timestamptz(6)
+  updatedAt       DateTime         @db.Timestamptz(6)
+  homepage_id     String?          @db.Uuid
+  title           String           @db.VarChar(255)
+  order           Int
+  url             String?          @db.VarChar(255)
+  image_id        String?          @db.Uuid
+  venue_homepages venue_homepages? @relation(fields: [homepage_id], references: [id], onDelete: Cascade)
+  assets          assets?          @relation(fields: [image_id], references: [id])
+
+  @@index([homepage_id], map: "venue_homepage_callouts_homepage_id")
+}
+
+model venue_homepage_faqs {
+  id              String           @id @db.Uuid
+  createdAt       DateTime         @db.Timestamptz(6)
+  updatedAt       DateTime         @db.Timestamptz(6)
+  homepage_id     String?          @db.Uuid
+  name            String?
+  description     String?
+  order           Int?
+  venue_homepages venue_homepages? @relation(fields: [homepage_id], references: [id], onDelete: Cascade)
+
+  @@index([homepage_id], map: "venue_homepage_faqs_homepage_id")
+}
+
+model venue_homepages {
+  id                      String                    @id @db.Uuid
+  createdAt               DateTime                  @db.Timestamptz(6)
+  updatedAt               DateTime                  @db.Timestamptz(6)
+  creator_id              String?                   @db.Uuid
+  title                   String?
+  description             String?
+  faq_section_title       String?
+  settings                Json?
+  venue_homepage_callouts venue_homepage_callouts[]
+  venue_homepage_faqs     venue_homepage_faqs[]
+  users                   users?                    @relation(fields: [creator_id], references: [id])
+  venues                  venues[]
+}
+
+model venue_images {
+  id        String   @id @db.Uuid
+  venue_id  String?  @db.Uuid
+  image_id  String?  @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  order     Int?
+  updatedAt DateTime @db.Timestamptz(6)
+  assets    assets?  @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  venues    venues?  @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+}
+
+model venue_lesson_requests {
+  id                String           @id @db.Uuid
+  createdAt         DateTime         @db.Timestamptz(6)
+  updatedAt         DateTime         @db.Timestamptz(6)
+  venue_id          String?          @db.Uuid
+  customer_id       String?          @db.Uuid
+  lesson_request_id String?          @db.Uuid
+  venue_customers   venue_customers? @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  lesson_requests   lesson_requests? @relation(fields: [lesson_request_id], references: [id], onDelete: Cascade)
+  venues            venues?          @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([venue_id], map: "venue_lesson_requests_venue_id")
+}
+
+model venue_open_hours {
+  id          String    @id @db.Uuid
+  createdAt   DateTime  @db.Timestamptz(6)
+  updatedAt   DateTime  @db.Timestamptz(6)
+  venue_id    String?   @db.Uuid
+  day_of_week String?
+  wall_start  DateTime? @db.Time(6)
+  wall_end    DateTime? @db.Time(6)
+  venues      venues?   @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@index([venue_id], map: "venue_open_hours_venue_id")
+}
+
+model venue_team_members {
+  id        String   @id @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  venue_id  String?  @db.Uuid
+  user_id   String?  @db.Uuid
+  users     users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  venues    venues?  @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+
+  @@unique([venue_id, user_id], map: "venue_team_members_venue_id_user_id")
+}
+
+model venues {
+  id                                                             String                    @id @db.Uuid
+  createdAt                                                      DateTime                  @db.Timestamptz(6)
+  updatedAt                                                      DateTime                  @db.Timestamptz(6)
+  sid                                                            String?                   @unique(map: "venues_sid")
+  name                                                           String?
+  org_id                                                         String?                   @db.Uuid
+  address_id                                                     String?                   @db.Uuid
+  phone_number                                                   String?
+  email                                                          String?
+  tz                                                             String?
+  homepage_id                                                    String?                   @db.Uuid
+  settings                                                       Json?
+  bookability                                                    String?                   @db.VarChar(255)
+  official_website_url                                           String?                   @db.VarChar(255)
+  default_res_availability_window_id                             String?                   @db.Uuid
+  default_program_registration_window_id                         String?                   @db.Uuid
+  benefit_venues                                                 benefit_venues[]
+  btl_featured_facilities                                        btl_featured_facilities[]
+  club_venues                                                    club_venues[]
+  pq_venues                                                      pq_venues[]
+  program_package_sets                                           program_package_sets[]
+  programs                                                       programs[]
+  res_schedules                                                  res_schedules[]
+  resources                                                      resources[]
+  user_program_packages                                          user_program_packages[]
+  venue_available_lessons                                        venue_available_lessons[]
+  venue_customers                                                venue_customers[]
+  venue_images                                                   venue_images[]
+  venue_lesson_requests                                          venue_lesson_requests[]
+  venue_open_hours                                               venue_open_hours[]
+  venue_team_members                                             venue_team_members[]
+  addresses                                                      addresses?                @relation(fields: [address_id], references: [id], onDelete: Cascade)
+  windows_venues_default_program_registration_window_idTowindows windows?                  @relation("venues_default_program_registration_window_idTowindows", fields: [default_program_registration_window_id], references: [id])
+  windows_venues_default_res_availability_window_idTowindows     windows?                  @relation("venues_default_res_availability_window_idTowindows", fields: [default_res_availability_window_id], references: [id])
+  venue_homepages                                                venue_homepages?          @relation(fields: [homepage_id], references: [id])
+  orgs                                                           orgs?                     @relation(fields: [org_id], references: [id], onDelete: Cascade)
+
+  @@index([org_id], map: "venues_org_id")
+}
+
+model windows {
+  id                                                            String      @id @db.Uuid
+  createdAt                                                     DateTime    @db.Timestamptz(6)
+  updatedAt                                                     DateTime    @db.Timestamptz(6)
+  name                                                          String?     @db.VarChar(255)
+  date_start                                                    DateTime?   @db.Date
+  date_end                                                      DateTime?   @db.Date
+  wall_start                                                    DateTime?   @db.Time(6)
+  wall_end                                                      DateTime?   @db.Time(6)
+  type                                                          String      @db.VarChar(255)
+  rel_unit_end                                                  String?     @db.VarChar(255)
+  rel_value_end                                                 Int?
+  rel_unit_start                                                String?     @db.VarChar(255)
+  rel_value_start                                               Int?
+  orgs                                                          orgs[]
+  programs                                                      programs[]
+  resources                                                     resources[]
+  venues_venues_default_program_registration_window_idTowindows venues[]    @relation("venues_default_program_registration_window_idTowindows")
+  venues_venues_default_res_availability_window_idTowindows     venues[]    @relation("venues_default_res_availability_window_idTowindows")
+}

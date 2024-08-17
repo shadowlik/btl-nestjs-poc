@@ -1,0 +1,19 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "typescript.preferences.importModuleSpecifier": "shortest",
+    "cSpell.words": [
+        "backoffice",
+        "dayjs",
+        "mapbox",
+        "pagarme",
+        "Pagarme",
+        "SENDGRID",
+        "striptags",
+        "typesense",
+        "Typesense"
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
